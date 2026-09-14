@@ -110,7 +110,7 @@ with tab1:
             st.session_state.receta = []
             st.rerun()
 
- if calcular:
+    if calcular:
         df_limpio = df_editado.fillna(0)
         
         # Totales ponderados
