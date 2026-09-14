@@ -110,10 +110,10 @@ with tab1:
             st.session_state.receta = []
             st.rerun()
 
-    if calcular:
-        # Reemplazo preventivo de None por 0 para evitar errores de NaN
+ if calcular:
         df_limpio = df_editado.fillna(0)
         
+        # Totales ponderados
         tot_kcal = sum((float(row["Gramos"]) * float(row["Kcal/100g"])) / 100.0 for _, row in df_limpio.iterrows())
         tot_azucar = sum((float(row["Gramos"]) * float(row["Azúcar_Añadido_g"])) / 100.0 for _, row in df_limpio.iterrows())
         tot_grasa_tot = sum((float(row["Gramos"]) * float(row["Grasa_Tot_g"])) / 100.0 for _, row in df_limpio.iterrows())
@@ -122,12 +122,19 @@ with tab1:
         tiene_edulcorante = any(df_limpio["Edulcorante"])
         tiene_cafeina = any(df_limpio["Cafeina"])
 
+        # Base 100 g
         f_100 = 100.0 / peso_cocido
         c_kcal = tot_kcal * f_100
+        c_kj = c_kcal * 4.184  # Factor oficial CAA (1 kcal = 4.184 kJ)
         c_azucar = tot_azucar * f_100
         c_grasa_tot = tot_grasa_tot * f_100
         c_grasa_sat = tot_grasa_sat * f_100
         c_sodio = tot_sodio * f_100
+
+        # Base Porción
+        p_kcal = c_kcal * porcion / 100.0
+        p_kj = c_kj * porcion / 100.0
+        vd_kcal = round((p_kcal / 2000.0) * 100)
 
         # Algoritmo Ley 27.642 (Etapa 2 definitiva / Perfil OPS)
         sellos = []
@@ -143,15 +150,17 @@ with tab1:
             sellos.append("EXCESO EN CALORÍAS")
 
         st.markdown("---")
-        st.subheader("Resultados del Análisis:")
+        st.subheader("Resultados del Rotulado Nutricional:")
         r1, r2 = st.columns(2)
         with r1:
-            st.markdown(f"**Valor Energético (100 g):** {c_kcal:.1f} kcal")
-            st.markdown(f"**Valor Energético por Porción ({porcion:.0f} g):** {(c_kcal * porcion / 100.0):.1f} kcal")
-            st.markdown(f"**Azúcares añadidos (100 g):** {c_azucar:.1f} g")
-            st.markdown(f"**Grasas Totales (100 g):** {c_grasa_tot:.1f} g")
-            st.markdown(f"**Grasas Saturadas (100 g):** {c_grasa_sat:.1f} g")
-            st.markdown(f"**Sodio (100 g):** {c_sodio:.1f} mg")
+            st.markdown("#### Declaración de Valor Energético")
+            st.markdown(f"• **Cada 100 g:** {c_kcal:.0f} kcal = {c_kj:.0f} kJ")
+            st.markdown(f"• **Por porción ({porcion:.0f} g):** {p_kcal:.0f} kcal = {p_kj:.0f} kJ (%VD: {vd_kcal}%)")
+            st.markdown("#### Nutrientes Críticos")
+            st.markdown(f"• **Azúcares añadidos (100 g):** {c_azucar:.1f} g")
+            st.markdown(f"• **Grasas Totales (100 g):** {c_grasa_tot:.1f} g")
+            st.markdown(f"• **Grasas Saturadas (100 g):** {c_grasa_sat:.1f} g")
+            st.markdown(f"• **Sodio (100 g):** {c_sodio:.1f} mg")
         with r2:
             st.markdown("### Sellos Frontales Obligatorios:")
             if sellos:
