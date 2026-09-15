@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from google import genai
+import requests
 
 st.set_page_config(page_title="Plataforma Bromatológica - Rotulado y Sellos", layout="wide")
 
@@ -90,7 +90,6 @@ with tab1:
             })
             st.rerun()
 
-    # Receta inicial por defecto si está vacía
     if "receta" not in st.session_state:
         st.session_state.receta = [
             {"Ingrediente": "Harina de trigo 000", "Gramos": 300.0, "Kcal/100g": 350.0, "Azúcar_Añadido_g": 0.0, "Grasa_Tot_g": 1.2, "Grasa_Sat_g": 0.3, "Sodio_mg": 2.0, "Edulcorante": False, "Cafeina": False},
@@ -113,7 +112,6 @@ with tab1:
     if calcular:
         df_limpio = df_editado.fillna(0)
         
-        # Totales ponderados
         tot_kcal = sum((float(row["Gramos"]) * float(row["Kcal/100g"])) / 100.0 for _, row in df_limpio.iterrows())
         tot_azucar = sum((float(row["Gramos"]) * float(row["Azúcar_Añadido_g"])) / 100.0 for _, row in df_limpio.iterrows())
         tot_grasa_tot = sum((float(row["Gramos"]) * float(row["Grasa_Tot_g"])) / 100.0 for _, row in df_limpio.iterrows())
@@ -122,21 +120,18 @@ with tab1:
         tiene_edulcorante = any(df_limpio["Edulcorante"])
         tiene_cafeina = any(df_limpio["Cafeina"])
 
-        # Base 100 g
         f_100 = 100.0 / peso_cocido
         c_kcal = tot_kcal * f_100
-        c_kj = c_kcal * 4.184  # Factor oficial CAA (1 kcal = 4.184 kJ)
+        c_kj = c_kcal * 4.184
         c_azucar = tot_azucar * f_100
         c_grasa_tot = tot_grasa_tot * f_100
         c_grasa_sat = tot_grasa_sat * f_100
         c_sodio = tot_sodio * f_100
 
-        # Base Porción
         p_kcal = c_kcal * porcion / 100.0
         p_kj = c_kj * porcion / 100.0
         vd_kcal = round((p_kcal / 2000.0) * 100)
 
-        # Algoritmo Ley 27.642 (Etapa 2 definitiva / Perfil OPS)
         sellos = []
         if c_azucar > 0 and c_kcal > 0 and ((c_azucar * 4.0) / c_kcal) >= 0.10:
             sellos.append("EXCESO EN AZÚCARES")
@@ -194,25 +189,36 @@ with tab2:
         with st.chat_message("user"):
             st.markdown(pregunta)
 
-        api_key = st.secrets.get("GEMINI_API_KEY")
+        api_key = st.secrets.get("GEMINI_API_KEY", "")
         if not api_key:
-            respuesta_texto = "Falta configurar GEMINI_API_KEY en los Secrets de Streamlit (Manage app > Settings > Secrets)."
+            respuesta_texto = "Falta configurar GEMINI_API_KEY en Secrets de Streamlit."
         else:
             try:
-                # Conexión directa pasando la clave desde los secretos de Streamlit
-                client = genai.Client(api_key=api_key)
-                system_instruction = (
-                    "Sos un asesor bromatológico especialista en el Código Alimentario Argentino (CAA Cap. IV y V) "
-                    "y la Ley 27.642 con su Decreto 151/2022. Respondé de forma técnica, precisa y citando normativa."
-                )
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=pregunta,
-                    config=dict(system_instruction=system_instruction)
-                )
-                respuesta_texto = response.text
+                # Envío directo por HTTP a la API oficial de Google
+                url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+                headers = {
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": api_key.strip()
+                }
+                body = {
+                    "contents": [{"parts": [{"text": pregunta}]}],
+                    "systemInstruction": {
+                        "parts": [{
+                            "text": (
+                                "Sos un asesor bromatológico especialista en el Código Alimentario Argentino (CAA Cap. IV y V) "
+                                "y la Ley 27.642 con su Decreto 151/2022. Respondé de forma técnica, precisa y citando normativa."
+                            )
+                        }]
+                    }
+                }
+                r = requests.post(url, headers=headers, json=body, timeout=30)
+                if r.status_code == 200:
+                    data = r.json()
+                    respuesta_texto = data["candidates"][0]["content"]["parts"][0]["text"]
+                else:
+                    respuesta_texto = f"Error {r.status_code} de Google: {r.text}"
             except Exception as e:
-                respuesta_texto = f"Error al conectar con Gemini: {str(e)}"
+                respuesta_texto = f"Error de conexión: {str(e)}"
 
         st.session_state.mensajes.append({"role": "assistant", "content": respuesta_texto})
         with st.chat_message("assistant"):
