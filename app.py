@@ -194,20 +194,25 @@ with tab2:
         with st.chat_message("user"):
             st.markdown(pregunta)
 
-        try:
-            client = genai.Client()
-            system_instruction = (
-                "Sos un asesor bromatológico especialista en el Código Alimentario Argentino (CAA Cap. IV y V) "
-                "y la Ley 27.642 con su Decreto 151/2022. Respondé de forma técnica, precisa y citando normativa."
-            )
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=pregunta,
-                config=dict(system_instruction=system_instruction)
-            )
-            respuesta_texto = response.text
-        except Exception:
-            respuesta_texto = "El bot está listo. Recordá configurar la variable GEMINI_API_KEY en los secretos de Streamlit para habilitar respuestas automáticas."
+        api_key = st.secrets.get("GEMINI_API_KEY")
+        if not api_key:
+            respuesta_texto = "Falta configurar GEMINI_API_KEY en los Secrets de Streamlit (Manage app > Settings > Secrets)."
+        else:
+            try:
+                # Conexión directa pasando la clave desde los secretos de Streamlit
+                client = genai.Client(api_key=api_key)
+                system_instruction = (
+                    "Sos un asesor bromatológico especialista en el Código Alimentario Argentino (CAA Cap. IV y V) "
+                    "y la Ley 27.642 con su Decreto 151/2022. Respondé de forma técnica, precisa y citando normativa."
+                )
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=pregunta,
+                    config=dict(system_instruction=system_instruction)
+                )
+                respuesta_texto = response.text
+            except Exception as e:
+                respuesta_texto = f"Error al conectar con Gemini: {str(e)}"
 
         st.session_state.mensajes.append({"role": "assistant", "content": respuesta_texto})
         with st.chat_message("assistant"):
