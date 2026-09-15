@@ -189,36 +189,60 @@ with tab2:
         with st.chat_message("user"):
             st.markdown(pregunta)
 
-        api_key = st.secrets.get("GEMINI_API_KEY", "")
+        api_key = st.secrets.get("GEMINI_API_KEY", "").strip()
         if not api_key:
             respuesta_texto = "Falta configurar GEMINI_API_KEY en Secrets de Streamlit."
         else:
-            try:
-                # Envío directo por HTTP a la API oficial de Google
-                url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent"
-                headers = {
-                    "Content-Type": "application/json",
-                    "x-goog-api-key": api_key.strip()
-                }
-                body = {
-                    "contents": [{"parts": [{"text": pregunta}]}],
-                    "systemInstruction": {
-                        "parts": [{
-                            "text": (
-                                "Sos un asesor bromatológico especialista en el Código Alimentario Argentino (CAA Cap. IV y V) "
-                                "y la Ley 27.642 con su Decreto 151/2022. Respondé de forma técnica, precisa y citando normativa."
-                            )
-                        }]
+            with st.spinner("Consultando normativa..."):
+                try:
+                    headers = {
+                        "Content-Type": "application/json",
+                        "x-goog-api-key": api_key
                     }
-                }
-                r = requests.post(url, headers=headers, json=body, timeout=30)
-                if r.status_code == 200:
-                    data = r.json()
-                    respuesta_texto = data["candidates"][0]["content"]["parts"][0]["text"]
-                else:
-                    respuesta_texto = f"Error {r.status_code} de Google: {r.text}"
-            except Exception as e:
-                respuesta_texto = f"Error de conexión: {str(e)}"
+                    
+                    # 1. Obtener lista de modelos soportados directamente desde Google
+                    list_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+                    list_res = requests.get(list_url, timeout=10)
+                    
+                    modelo_a_usar = None
+                    if list_res.status_code == 200:
+                        modelos_disponibles = list_res.json().get("models", [])
+                        # Buscar el modelo que soporte generar contenido
+                        for m in modelos_disponibles:
+                            metodos = m.get("supportedGenerationMethods", [])
+                            if "generateContent" in metodos and "flash" in m.get("name", ""):
+                                modelo_a_usar = m.get("name")
+                                break
+                        if not modelo_a_usar and modelos_disponibles:
+                            for m in modelos_disponibles:
+                                if "generateContent" in m.get("supportedGenerationMethods", []):
+                                    modelo_a_usar = m.get("name")
+                                    break
+                    
+                    if not modelo_a_usar:
+                        modelo_a_usar = "models/gemini-2.5-flash"
+
+                    # 2. Llamada con el modelo detectado
+                    url = f"https://generativelanguage.googleapis.com/v1beta/{modelo_a_usar}:generateContent"
+                    body = {
+                        "contents": [{"parts": [{"text": pregunta}]}],
+                        "systemInstruction": {
+                            "parts": [{
+                                "text": (
+                                    "Sos un asesor bromatológico especialista en el Código Alimentario Argentino (CAA Cap. IV y V) "
+                                    "y la Ley 27.642 con su Decreto 151/2022. Respondé de forma técnica, precisa y citando normativa."
+                                )
+                            }]
+                        }
+                    }
+                    r = requests.post(url, headers=headers, json=body, timeout=30)
+                    if r.status_code == 200:
+                        data = r.json()
+                        respuesta_texto = data["candidates"][0]["content"]["parts"][0]["text"]
+                    else:
+                        respuesta_texto = f"Error {r.status_code} ({modelo_a_usar}): {r.text}"
+                except Exception as e:
+                    respuesta_texto = f"Error al procesar la solicitud: {str(e)}"
 
         st.session_state.mensajes.append({"role": "assistant", "content": respuesta_texto})
         with st.chat_message("assistant"):
