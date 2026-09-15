@@ -195,7 +195,7 @@ with tab2:
         else:
             try:
                 # Envío directo por HTTP a la API oficial de Google
-                url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+                url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent"
                 headers = {
                     "Content-Type": "application/json",
                     "x-goog-api-key": api_key.strip()
