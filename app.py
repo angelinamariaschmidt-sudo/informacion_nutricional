@@ -257,7 +257,7 @@ with tab1:
         col_of1, col_of2 = st.columns(2)
         with col_of1:
             st.markdown("**Argentina e Iberoamérica**")
-            st.link_button("🇦🇷 ARGENFOODS (UNLu)", "http://www.argenfoods.unlu.edu.ar/")
+            st.link_button("🇦🇷 ARGENFOODS (UNLu)", "https://www.argenfood.unlu.edu.ar/Tablas/Tabla.htm")
             st.caption("Base de datos de alimentos del Instituto de Investigaciones Agropecuarias y UNLu.")
             
             st.write("")
