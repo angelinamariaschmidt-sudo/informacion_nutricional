@@ -78,42 +78,27 @@ SARA2_DICT = {
 
     # Panificados y Masas
     "Pan francés / Felipe": {"kcal": 268.0, "cho": 57.0, "azuc_tot": 0.2, "azuc_anad": 0.0, "prot": 8.4, "gtot": 0.7, "gsat": 0.13, "gtrans": 0.0, "fibra": 2.8, "sodio": 400.0, "edulc": False, "caf": False},
-    "Pan francés sin sal": {"kcal": 268.0, "cho": 57.0, "azuc_tot": 0.2, "azuc_anad": 0.0, "prot": 8.4, "gtot": 0.7, "gsat": 0.13, "gtrans": 0.0, "fibra": 2.8, "sodio": 10.0, "edulc": False, "caf": False},
     "Pan de molde blanco / lactal": {"kcal": 244.0, "cho": 46.7, "azuc_tot": 3.5, "azuc_anad": 3.5, "prot": 9.4, "gtot": 2.2, "gsat": 0.73, "gtrans": 0.0, "fibra": 3.5, "sodio": 415.0, "edulc": False, "caf": False},
     "Pan de molde integral / salvado": {"kcal": 225.0, "cho": 40.7, "azuc_tot": 5.9, "azuc_anad": 5.9, "prot": 10.9, "gtot": 2.1, "gsat": 0.53, "gtrans": 0.0, "fibra": 7.4, "sodio": 447.0, "edulc": False, "caf": False},
-    "Pan de molde SIN TACC": {"kcal": 230.0, "cho": 41.5, "azuc_tot": 4.3, "azuc_anad": 4.3, "prot": 4.3, "gtot": 5.2, "gsat": 0.98, "gtrans": 0.0, "fibra": 4.3, "sodio": 447.0, "edulc": False, "caf": False},
     "Pan árabe / pita": {"kcal": 261.0, "cho": 53.5, "azuc_tot": 1.3, "azuc_anad": 1.3, "prot": 9.1, "gtot": 1.2, "gsat": 0.17, "gtrans": 0.0, "fibra": 2.2, "sodio": 536.0, "edulc": False, "caf": False},
-    "Pan para hamburguesas / panchos": {"kcal": 252.0, "cho": 46.7, "azuc_tot": 4.3, "azuc_anad": 4.3, "prot": 8.9, "gtot": 3.3, "gsat": 0.62, "gtrans": 0.03, "fibra": 2.7, "sodio": 490.0, "edulc": False, "caf": False},
     "Pan rallado clásico": {"kcal": 371.0, "cho": 67.5, "azuc_tot": 5.7, "azuc_anad": 4.5, "prot": 13.4, "gtot": 5.3, "gsat": 0.7, "gtrans": 0.0, "fibra": 4.5, "sodio": 732.0, "edulc": False, "caf": False},
-    "Pan rallado SIN TACC": {"kcal": 371.0, "cho": 67.5, "azuc_tot": 5.7, "azuc_anad": 4.5, "prot": 13.4, "gtot": 5.3, "gsat": 0.7, "gtrans": 0.0, "fibra": 4.5, "sodio": 439.0, "edulc": False, "caf": False},
-    "Panko (rebozador japonés)": {"kcal": 314.0, "cho": 67.8, "azuc_tot": 3.6, "azuc_anad": 3.6, "prot": 10.7, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 3.6, "sodio": 321.0, "edulc": False, "caf": False},
-    "Tostadas de mesa clásicas": {"kcal": 388.0, "cho": 74.5, "azuc_tot": 2.5, "azuc_anad": 2.5, "prot": 13.0, "gtot": 4.2, "gsat": 0.48, "gtrans": 0.0, "fibra": 3.5, "sodio": 482.0, "edulc": False, "caf": False},
     "Galletitas de agua crackers con grasa": {"kcal": 451.0, "cho": 71.3, "azuc_tot": 1.3, "azuc_anad": 0.0, "prot": 12.2, "gtot": 13.0, "gsat": 6.0, "gtrans": 1.4, "fibra": 2.8, "sodio": 566.0, "edulc": False, "caf": False},
     "Galletitas de agua crackers con aceite": {"kcal": 438.0, "cho": 71.3, "azuc_tot": 1.3, "azuc_anad": 0.0, "prot": 12.2, "gtot": 11.6, "gsat": 1.16, "gtrans": 0.0, "fibra": 2.8, "sodio": 566.0, "edulc": False, "caf": False},
     "Galletitas de salvado / integrales": {"kcal": 411.0, "cho": 56.5, "azuc_tot": 1.2, "azuc_anad": 1.2, "prot": 15.8, "gtot": 10.6, "gsat": 3.16, "gtrans": 0.0, "fibra": 9.8, "sodio": 543.0, "edulc": False, "caf": False},
-    "Galletitas dulces secas simples": {"kcal": 450.0, "cho": 73.0, "azuc_tot": 20.3, "azuc_anad": 20.3, "prot": 8.5, "gtot": 13.8, "gsat": 6.17, "gtrans": 1.2, "fibra": 1.1, "sodio": 233.0, "edulc": False, "caf": False},
-    "Galletitas dulces rellenas": {"kcal": 473.0, "cho": 69.4, "azuc_tot": 40.0, "azuc_anad": 40.0, "prot": 4.9, "gtot": 19.6, "gsat": 8.76, "gtrans": 1.7, "fibra": 2.2, "sodio": 388.0, "edulc": False, "caf": False},
     "Masa de tarta / empanadas clásica": {"kcal": 337.0, "cho": 47.6, "azuc_tot": 0.2, "azuc_anad": 0.0, "prot": 6.7, "gtot": 13.3, "gsat": 6.7, "gtrans": 0.9, "fibra": 1.7, "sodio": 561.0, "edulc": False, "caf": False},
-    "Masa de tarta SIN TACC": {"kcal": 283.0, "cho": 47.0, "azuc_tot": 0.4, "azuc_anad": 0.0, "prot": 2.7, "gtot": 9.3, "gsat": 5.3, "gtrans": 0.0, "fibra": 2.7, "sodio": 497.0, "edulc": False, "caf": False},
 
     # Grasas y Aceites
     "Aceite de girasol refinado": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 10.6, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
     "Aceite de girasol alto oleico": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 9.6, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
     "Aceite de maíz refinado": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 15.2, "gtrans": 0.0, "fibra": 0.0, "sodio": 2.0, "edulc": False, "caf": False},
     "Aceite de oliva virgen extra": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 17.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
-    "Aceite de soja": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 15.65, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
-    "Aceite de coco": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 82.48, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
-    "Grasa vacuna refinada": {"kcal": 899.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 99.9, "gsat": 49.8, "gtrans": 3.7, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
-    "Grasa de cerdo refinada": {"kcal": 898.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 99.8, "gsat": 39.2, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Grasa vacuna refinada / primer jugo": {"kcal": 899.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 99.9, "gsat": 49.8, "gtrans": 3.7, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
     "Manteca de vaca": {"kcal": 758.0, "cho": 0.1, "azuc_tot": 0.1, "azuc_anad": 0.0, "prot": 0.5, "gtot": 84.0, "gsat": 50.93, "gtrans": 3.28, "fibra": 0.0, "sodio": 223.0, "edulc": False, "caf": False},
     "Margarina vegetal": {"kcal": 559.0, "cho": 0.7, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.2, "gtot": 61.7, "gsat": 27.6, "gtrans": 0.88, "fibra": 0.0, "sodio": 295.0, "edulc": False, "caf": False},
 
     # Azúcares y Dulces
     "Azúcar blanca refinada común": {"kcal": 400.0, "cho": 100.0, "azuc_tot": 99.8, "azuc_anad": 99.8, "prot": 0.0, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 1.0, "edulc": False, "caf": False},
-    "Azúcar impalpable": {"kcal": 399.0, "cho": 99.8, "azuc_tot": 97.8, "azuc_anad": 97.8, "prot": 0.0, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 1.0, "edulc": False, "caf": False},
-    "Azúcar mascabo / morena": {"kcal": 393.0, "cho": 98.1, "azuc_tot": 97.0, "azuc_anad": 97.0, "prot": 0.1, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 28.0, "edulc": False, "caf": False},
     "Miel pura de abejas": {"kcal": 330.0, "cho": 82.2, "azuc_tot": 82.1, "azuc_anad": 82.1, "prot": 0.3, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.2, "sodio": 4.0, "edulc": False, "caf": False},
-    "Jarabe de glucosa": {"kcal": 339.0, "cho": 84.7, "azuc_tot": 40.2, "azuc_anad": 40.2, "prot": 0.0, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
     "Dulce de leche común": {"kcal": 315.0, "cho": 57.4, "azuc_tot": 49.7, "azuc_anad": 44.0, "prot": 6.5, "gtot": 6.6, "gsat": 4.07, "gtrans": 0.33, "fibra": 0.0, "sodio": 138.0, "edulc": False, "caf": False},
     "Dulce de batata": {"kcal": 255.0, "cho": 62.5, "azuc_tot": 52.0, "azuc_anad": 52.0, "prot": 0.9, "gtot": 0.1, "gsat": 0.0, "gtrans": 0.0, "fibra": 2.5, "sodio": 19.0, "edulc": False, "caf": False},
     "Dulce de membrillo": {"kcal": 269.0, "cho": 66.7, "azuc_tot": 52.0, "azuc_anad": 52.0, "prot": 0.4, "gtot": 0.1, "gsat": 0.0, "gtrans": 0.0, "fibra": 4.1, "sodio": 0.0, "edulc": False, "caf": False},
@@ -139,12 +124,10 @@ SARA2_DICT = {
     # Carnes y Embutidos
     "Carne vacuna magra (nalga/peceto)": {"kcal": 138.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 22.2, "gtot": 5.5, "gsat": 2.15, "gtrans": 0.23, "fibra": 0.0, "sodio": 60.0, "edulc": False, "caf": False},
     "Carne vacuna semigrasa (roast beef)": {"kcal": 176.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 21.3, "gtot": 10.1, "gsat": 4.12, "gtrans": 0.4, "fibra": 0.0, "sodio": 61.0, "edulc": False, "caf": False},
-    "Carne picada vacuna común": {"kcal": 210.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 20.0, "gtot": 14.4, "gsat": 6.04, "gtrans": 0.46, "fibra": 0.0, "sodio": 52.0, "edulc": False, "caf": False},
     "Pollo pechuga sin piel": {"kcal": 114.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 22.5, "gtot": 2.6, "gsat": 0.69, "gtrans": 0.01, "fibra": 0.0, "sodio": 45.0, "edulc": False, "caf": False},
     "Carne de cerdo magra": {"kcal": 206.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 18.2, "gtot": 14.8, "gsat": 4.92, "gtrans": 0.03, "fibra": 0.0, "sodio": 57.0, "edulc": False, "caf": False},
     "Jamón cocido": {"kcal": 107.0, "cho": 1.0, "azuc_tot": 0.1, "azuc_anad": 0.0, "prot": 18.4, "gtot": 3.3, "gsat": 1.1, "gtrans": 0.01, "fibra": 0.0, "sodio": 800.0, "edulc": False, "caf": False},
     "Jamón crudo": {"kcal": 319.0, "cho": 0.2, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 28.8, "gtot": 22.6, "gsat": 7.94, "gtrans": 0.71, "fibra": 0.0, "sodio": 2130.0, "edulc": False, "caf": False},
-    "Salame": {"kcal": 372.0, "cho": 0.7, "azuc_tot": 0.3, "azuc_anad": 0.0, "prot": 21.1, "gtot": 31.7, "gsat": 11.42, "gtrans": 0.48, "fibra": 0.0, "sodio": 1358.0, "edulc": False, "caf": False},
     "Salchicha de Viena": {"kcal": 226.0, "cho": 2.6, "azuc_tot": 2.4, "azuc_anad": 0.0, "prot": 15.3, "gtot": 17.2, "gsat": 6.08, "gtrans": 0.7, "fibra": 0.0, "sodio": 1297.0, "edulc": False, "caf": False},
 
     # Sales, Condimentos y Otros
@@ -160,6 +143,22 @@ SARA2_DICT = {
 }
 
 lista_alimentos_completa = sorted(list(SARA2_DICT.keys()))
+
+# Función auxiliar para crear receta inicial estándar
+def receta_inicial():
+    return [
+        {"Ingrediente": "Sémola de trigo / Semolín candeal", "Gramos": 300.0, "Kcal": 336.0, "Carbohidratos_g": 72.8, "Azucares_Tot_g": 0.0, "Azucar_Anadido_g": 0.0, "Proteinas_g": 12.7, "Grasa_Tot_g": 1.1, "Grasa_Sat_g": 0.15, "Grasa_Trans_g": 0.0, "Fibra_g": 3.9, "Sodio_mg": 1.0, "Edulcorante": False, "Cafeina": False},
+        {"Ingrediente": "Huevo entero", "Gramos": 100.0, "Kcal": 156.0, "Carbohidratos_g": 0.4, "Azucares_Tot_g": 0.4, "Azucar_Anadido_g": 0.0, "Proteinas_g": 12.0, "Grasa_Tot_g": 11.8, "Grasa_Sat_g": 3.18, "Grasa_Trans_g": 0.0, "Fibra_g": 0.0, "Sodio_mg": 135.0, "Edulcorante": False, "Cafeina": False},
+        {"Ingrediente": "Sal fina de mesa común (NaCl)", "Gramos": 5.0, "Kcal": 0.0, "Carbohidratos_g": 0.0, "Azucares_Tot_g": 0.0, "Azucar_Anadido_g": 0.0, "Proteinas_g": 0.0, "Grasa_Tot_g": 0.0, "Grasa_Sat_g": 0.0, "Grasa_Trans_g": 0.0, "Fibra_g": 0.0, "Sodio_mg": 40000.0, "Edulcorante": False, "Cafeina": False}
+    ]
+
+# Verificación de estructura previa en sesión
+if "receta" not in st.session_state or not isinstance(st.session_state.receta, list):
+    st.session_state.receta = receta_inicial()
+else:
+    # Si la receta guardada tiene las columnas viejas, se reinicia de manera limpia
+    if st.session_state.receta and "Carbohidratos_g" not in st.session_state.receta[0]:
+        st.session_state.receta = receta_inicial()
 
 # ==========================================
 # PESTAÑA 1: CALCULADORA NUTRICIONAL
@@ -201,8 +200,6 @@ with tab1:
             st.write("")
             st.write("")
             if st.button("➕ Agregar a la receta"):
-                if "receta" not in st.session_state:
-                    st.session_state.receta = []
                 datos = SARA2_DICT[ing_elegido]
                 st.session_state.receta.append({
                     "Ingrediente": ing_elegido,
@@ -286,8 +283,6 @@ with tab1:
 
         if st.button("📥 Incorporar a la receta"):
             if nombre_man.strip():
-                if "receta" not in st.session_state:
-                    st.session_state.receta = []
                 st.session_state.receta.append({
                     "Ingrediente": nombre_man.strip(),
                     "Gramos": float(gramos_man),
@@ -309,14 +304,6 @@ with tab1:
             else:
                 st.warning("Completá el nombre del producto.")
 
-    # Formulación inicial por defecto
-    if "receta" not in st.session_state:
-        st.session_state.receta = [
-            {"Ingrediente": "Harina de trigo 000 fortificada", "Gramos": 300.0, "Kcal": 329.0, "Carbohidratos_g": 69.8, "Azucares_Tot_g": 0.3, "Azucar_Anadido_g": 0.0, "Proteinas_g": 10.3, "Grasa_Tot_g": 1.0, "Grasa_Sat_g": 0.16, "Grasa_Trans_g": 0.0, "Fibra_g": 4.0, "Sodio_mg": 7.0, "Edulcorante": False, "Cafeina": False},
-            {"Ingrediente": "Sal fina de mesa común (NaCl)", "Gramos": 10.0, "Kcal": 0.0, "Carbohidratos_g": 0.0, "Azucares_Tot_g": 0.0, "Azucar_Anadido_g": 0.0, "Proteinas_g": 0.0, "Grasa_Tot_g": 0.0, "Grasa_Sat_g": 0.0, "Grasa_Trans_g": 0.0, "Fibra_g": 0.0, "Sodio_mg": 40000.0, "Edulcorante": False, "Cafeina": False},
-            {"Ingrediente": "Grasa vacuna refinada", "Gramos": 80.0, "Kcal": 899.0, "Carbohidratos_g": 0.0, "Azucares_Tot_g": 0.0, "Azucar_Anadido_g": 0.0, "Proteinas_g": 0.0, "Grasa_Tot_g": 99.9, "Grasa_Sat_g": 49.8, "Grasa_Trans_g": 3.7, "Fibra_g": 0.0, "Sodio_mg": 0.0, "Edulcorante": False, "Cafeina": False}
-        ]
-
     st.markdown("---")
     st.subheader("2. Formulación del producto (tabla editable)")
     df_actual = pd.DataFrame(st.session_state.receta)
@@ -333,18 +320,27 @@ with tab1:
     if calcular:
         df_limpio = df_editado.fillna(0)
         
-        tot_kcal = sum((float(row["Gramos"]) * float(row["Kcal"])) / 100.0 for _, row in df_limpio.iterrows())
-        tot_cho = sum((float(row["Gramos"]) * float(row["Carbohidratos_g"])) / 100.0 for _, row in df_limpio.iterrows())
-        tot_azuc_tot = sum((float(row["Gramos"]) * float(row["Azucares_Tot_g"])) / 100.0 for _, row in df_limpio.iterrows())
-        tot_azuc_anad = sum((float(row["Gramos"]) * float(row["Azucar_Anadido_g"])) / 100.0 for _, row in df_limpio.iterrows())
-        tot_prot = sum((float(row["Gramos"]) * float(row["Proteinas_g"])) / 100.0 for _, row in df_limpio.iterrows())
-        tot_gtot = sum((float(row["Gramos"]) * float(row["Grasa_Tot_g"])) / 100.0 for _, row in df_limpio.iterrows())
-        tot_gsat = sum((float(row["Gramos"]) * float(row["Grasa_Sat_g"])) / 100.0 for _, row in df_limpio.iterrows())
-        tot_gtrans = sum((float(row["Gramos"]) * float(row["Grasa_Trans_g"])) / 100.0 for _, row in df_limpio.iterrows())
-        tot_fibra = sum((float(row["Gramos"]) * float(row["Fibra_g"])) / 100.0 for _, row in df_limpio.iterrows())
-        tot_sodio = sum((float(row["Gramos"]) * float(row["Sodio_mg"])) / 100.0 for _, row in df_limpio.iterrows())
-        tiene_edulcorante = any(df_limpio["Edulcorante"])
-        tiene_cafeina = any(df_limpio["Cafeina"])
+        # Lectura robusta con fallback para compatibilidad
+        def val(row, key_nueva, key_vieja=None):
+            if key_nueva in row:
+                return float(row[key_nueva])
+            if key_vieja and key_vieja in row:
+                return float(row[key_vieja])
+            return 0.0
+
+        tot_kcal = sum((val(row, "Gramos") * val(row, "Kcal", "Kcal/100g")) / 100.0 for _, row in df_limpio.iterrows())
+        tot_cho = sum((val(row, "Gramos") * val(row, "Carbohidratos_g")) / 100.0 for _, row in df_limpio.iterrows())
+        tot_azuc_tot = sum((val(row, "Gramos") * val(row, "Azucares_Tot_g")) / 100.0 for _, row in df_limpio.iterrows())
+        tot_azuc_anad = sum((val(row, "Gramos") * val(row, "Azucar_Anadido_g", "Azúcar_Añadido_g")) / 100.0 for _, row in df_limpio.iterrows())
+        tot_prot = sum((val(row, "Gramos") * val(row, "Proteinas_g")) / 100.0 for _, row in df_limpio.iterrows())
+        tot_gtot = sum((val(row, "Gramos") * val(row, "Grasa_Tot_g")) / 100.0 for _, row in df_limpio.iterrows())
+        tot_gsat = sum((val(row, "Gramos") * val(row, "Grasa_Sat_g")) / 100.0 for _, row in df_limpio.iterrows())
+        tot_gtrans = sum((val(row, "Gramos") * val(row, "Grasa_Trans_g")) / 100.0 for _, row in df_limpio.iterrows())
+        tot_fibra = sum((val(row, "Gramos") * val(row, "Fibra_g")) / 100.0 for _, row in df_limpio.iterrows())
+        tot_sodio = sum((val(row, "Gramos") * val(row, "Sodio_mg")) / 100.0 for _, row in df_limpio.iterrows())
+        
+        tiene_edulcorante = any(bool(row.get("Edulcorante", False)) for _, row in df_limpio.iterrows())
+        tiene_cafeina = any(bool(row.get("Cafeina", False)) for _, row in df_limpio.iterrows())
 
         # Concentración cada 100 g
         f_100 = 100.0 / peso_cocido
@@ -374,7 +370,7 @@ with tab1:
         p_fibra = c_fibra * f_porc
         p_sodio = c_sodio * f_porc
 
-        # Valores Diarios de Referencia (CAA Cap. V)
+        # Porcentajes de Valor Diario (%VD) según CAA Cap. V
         vd_kcal = round((p_kcal / 2000.0) * 100)
         vd_cho = round((p_cho / 300.0) * 100)
         vd_prot = round((p_prot / 75.0) * 100)
@@ -383,7 +379,7 @@ with tab1:
         vd_fibra = round((p_fibra / 25.0) * 100)
         vd_sodio = round((p_sodio / 2000.0) * 100)
 
-        # Algoritmo Ley 27.642 (Etapa 2 definitiva)
+        # Sellos Frontales Ley 27.642 (Etapa 2 definitiva)
         sellos = []
         if c_azuc_anad > 0 and c_kcal > 0 and ((c_azuc_anad * 4.0) / c_kcal) >= 0.10:
             sellos.append("EXCESO EN AZÚCARES")
