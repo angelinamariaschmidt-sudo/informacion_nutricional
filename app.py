@@ -198,10 +198,9 @@ BASE_NUTRICIONAL = {
 
 lista_alimentos_completa = sorted(list(BASE_NUTRICIONAL.keys()))
 
+# Inicialización completamente vacía
 if "receta" not in st.session_state:
-    st.session_state.receta = [
-        {"Ingrediente": "Sémola de trigo / Semolín candeal [SARA 2]", "Gramos": 300.0, "Kcal": 336.0, "Carbohidratos_g": 72.8, "Azucares_Tot_g": 0.0, "Azucar_Anadido_g": 0.0, "Proteinas_g": 12.7, "Grasa_Tot_g": 1.1, "Grasa_Sat_g": 0.15, "Grasa_Trans_g": 0.0, "Fibra_g": 3.9, "Sodio_mg": 1.0, "Edulcorante": False, "Cafeina": False}
-    ]
+    st.session_state.receta = []
 
 # ==========================================
 # PESTAÑA 1: CALCULADORA NUTRICIONAL
@@ -211,7 +210,7 @@ with tab1:
 
     col_p1, col_p2, col_p3 = st.columns([2, 1, 1])
     with col_p1:
-        nombre_prod = st.text_input("Denominación de venta del producto:", value="Pasta Seca al Huevo")
+        nombre_prod = st.text_input("Denominación de venta del producto:", value="", placeholder="Ej: Galletitas de avena, Pan de molde, Mermelada...")
     with col_p2:
         peso_cocido = st.number_input("Peso neto final (g)", min_value=1.0, value=500.0)
     with col_p3:
@@ -264,148 +263,152 @@ with tab1:
             st.rerun()
 
     if btn_calc:
-        registrar_evento(st.session_state.usuario, "Cálculo Nutricional", f"Producto: {nombre_prod}")
-        df_l = df_ed.fillna(0)
+        if df_ed.empty or len(df_ed) == 0:
+            st.warning("Agregá al menos un ingrediente para realizar el cálculo.")
+        else:
+            prod_nombre_final = nombre_prod.strip() if nombre_prod.strip() else "Producto Sin Denominación"
+            registrar_evento(st.session_state.usuario, "Cálculo Nutricional", f"Producto: {prod_nombre_final}")
+            df_l = df_ed.fillna(0)
 
-        def v(row, k):
-            return float(row.get(k, 0.0))
+            def v(row, k):
+                return float(row.get(k, 0.0))
 
-        tot_kcal = sum((v(r, "Gramos") * v(r, "Kcal")) / 100.0 for _, r in df_l.iterrows())
-        tot_cho = sum((v(r, "Gramos") * v(r, "Carbohidratos_g")) / 100.0 for _, r in df_l.iterrows())
-        tot_az_tot = sum((v(r, "Gramos") * v(r, "Azucares_Tot_g")) / 100.0 for _, r in df_l.iterrows())
-        tot_az_anad = sum((v(r, "Gramos") * v(r, "Azucar_Anadido_g")) / 100.0 for _, r in df_l.iterrows())
-        tot_prot = sum((v(r, "Gramos") * v(r, "Proteinas_g")) / 100.0 for _, r in df_l.iterrows())
-        tot_gt = sum((v(r, "Gramos") * v(r, "Grasa_Tot_g")) / 100.0 for _, r in df_l.iterrows())
-        tot_gs = sum((v(r, "Gramos") * v(r, "Grasa_Sat_g")) / 100.0 for _, r in df_l.iterrows())
-        tot_gtr = sum((v(r, "Gramos") * v(r, "Grasa_Trans_g")) / 100.0 for _, r in df_l.iterrows())
-        tot_fib = sum((v(r, "Gramos") * v(r, "Fibra_g")) / 100.0 for _, r in df_l.iterrows())
-        tot_sod = sum((v(r, "Gramos") * v(r, "Sodio_mg")) / 100.0 for _, r in df_l.iterrows())
+            tot_kcal = sum((v(r, "Gramos") * v(r, "Kcal")) / 100.0 for _, r in df_l.iterrows())
+            tot_cho = sum((v(r, "Gramos") * v(r, "Carbohidratos_g")) / 100.0 for _, r in df_l.iterrows())
+            tot_az_tot = sum((v(r, "Gramos") * v(r, "Azucares_Tot_g")) / 100.0 for _, r in df_l.iterrows())
+            tot_az_anad = sum((v(r, "Gramos") * v(r, "Azucar_Anadido_g")) / 100.0 for _, r in df_l.iterrows())
+            tot_prot = sum((v(r, "Gramos") * v(r, "Proteinas_g")) / 100.0 for _, r in df_l.iterrows())
+            tot_gt = sum((v(r, "Gramos") * v(r, "Grasa_Tot_g")) / 100.0 for _, r in df_l.iterrows())
+            tot_gs = sum((v(r, "Gramos") * v(r, "Grasa_Sat_g")) / 100.0 for _, r in df_l.iterrows())
+            tot_gtr = sum((v(r, "Gramos") * v(r, "Grasa_Trans_g")) / 100.0 for _, r in df_l.iterrows())
+            tot_fib = sum((v(r, "Gramos") * v(r, "Fibra_g")) / 100.0 for _, r in df_l.iterrows())
+            tot_sod = sum((v(r, "Gramos") * v(r, "Sodio_mg")) / 100.0 for _, r in df_l.iterrows())
 
-        tiene_edulcorante = any(bool(r.get("Edulcorante", False)) for _, r in df_l.iterrows())
-        tiene_cafeina = any(bool(r.get("Cafeina", False)) for _, r in df_l.iterrows())
+            tiene_edulcorante = any(bool(r.get("Edulcorante", False)) for _, r in df_l.iterrows())
+            tiene_cafeina = any(bool(r.get("Cafeina", False)) for _, r in df_l.iterrows())
 
-        f100 = 100.0 / peso_cocido
-        c_kcal, c_kj = tot_kcal * f100, tot_kcal * f100 * 4.184
-        c_cho, c_az_tot, c_az_anad = tot_cho * f100, tot_az_tot * f100, tot_az_anad * f100
-        c_prot, c_gt, c_gs = tot_prot * f100, tot_gt * f100, tot_gs * f100
-        c_gtr, c_fib, c_sod = tot_gtr * f100, tot_fib * f100, tot_sod * f100
+            f100 = 100.0 / peso_cocido
+            c_kcal, c_kj = tot_kcal * f100, tot_kcal * f100 * 4.184
+            c_cho, c_az_tot, c_az_anad = tot_cho * f100, tot_az_tot * f100, tot_az_anad * f100
+            c_prot, c_gt, c_gs = tot_prot * f100, tot_gt * f100, tot_gs * f100
+            c_gtr, c_fib, c_sod = tot_gtr * f100, tot_fib * f100, tot_sod * f100
 
-        f_p = porcion / 100.0
-        p_kcal, p_kj = c_kcal * f_p, c_kj * f_p
-        p_cho, p_az_tot, p_az_anad = c_cho * f_p, c_az_tot * f_p, c_az_anad * f_p
-        p_prot, p_gt, p_gs = c_prot * f_p, c_gt * f_p, c_gs * f_p
-        p_gtr, p_fib, p_sod = c_gtr * f_p, c_fib * f_p, c_sod * f_p
+            f_p = porcion / 100.0
+            p_kcal, p_kj = c_kcal * f_p, c_kj * f_p
+            p_cho, p_az_tot, p_az_anad = c_cho * f_p, c_az_tot * f_p, c_az_anad * f_p
+            p_prot, p_gt, p_gs = c_prot * f_p, c_gt * f_p, c_gs * f_p
+            p_gtr, p_fib, p_sod = c_gtr * f_p, c_fib * f_p, c_sod * f_p
 
-        vd_kcal, vd_cho = round((p_kcal / 2000.0) * 100), round((p_cho / 300.0) * 100)
-        vd_prot, vd_gt = round((p_prot / 75.0) * 100), round((p_gt / 55.0) * 100)
-        vd_gs, vd_fib, vd_sod = round((p_gs / 22.0) * 100), round((p_fib / 25.0) * 100), round((p_sod / 2000.0) * 100)
+            vd_kcal, vd_cho = round((p_kcal / 2000.0) * 100), round((p_cho / 300.0) * 100)
+            vd_prot, vd_gt = round((p_prot / 75.0) * 100), round((p_gt / 55.0) * 100)
+            vd_gs, vd_fib, vd_sod = round((p_gs / 22.0) * 100), round((p_fib / 25.0) * 100), round((p_sod / 2000.0) * 100)
 
-        sellos = []
-        if c_az_anad > 0 and c_kcal > 0 and ((c_az_anad * 4.0) / c_kcal) >= 0.10:
-            sellos.append("EXCESO EN AZÚCARES")
-        if c_gt > 0 and c_kcal > 0 and ((c_gt * 9.0) / c_kcal) >= 0.30:
-            sellos.append("EXCESO EN GRASAS TOTALES")
-        if c_gs > 0 and c_kcal > 0 and ((c_gs * 9.0) / c_kcal) >= 0.10:
-            sellos.append("EXCESO EN GRASAS SATURADAS")
-        if c_sod > 0 and ((c_kcal > 0 and (c_sod / c_kcal) >= 1.0) or (c_sod >= 300.0)):
-            sellos.append("EXCESO EN SODIO")
-        if any(s in ["EXCESO EN AZÚCARES", "EXCESO EN GRASAS TOTALES", "EXCESO EN GRASAS SATURADAS"] for s in sellos) and c_kcal >= 275.0:
-            sellos.append("EXCESO EN CALORÍAS")
+            sellos = []
+            if c_az_anad > 0 and c_kcal > 0 and ((c_az_anad * 4.0) / c_kcal) >= 0.10:
+                sellos.append("EXCESO EN AZÚCARES")
+            if c_gt > 0 and c_kcal > 0 and ((c_gt * 9.0) / c_kcal) >= 0.30:
+                sellos.append("EXCESO EN GRASAS TOTALES")
+            if c_gs > 0 and c_kcal > 0 and ((c_gs * 9.0) / c_kcal) >= 0.10:
+                sellos.append("EXCESO EN GRASAS SATURADAS")
+            if c_sod > 0 and ((c_kcal > 0 and (c_sod / c_kcal) >= 1.0) or (c_sod >= 300.0)):
+                sellos.append("EXCESO EN SODIO")
+            if any(s in ["EXCESO EN AZÚCARES", "EXCESO EN GRASAS TOTALES", "EXCESO EN GRASAS SATURADAS"] for s in sellos) and c_kcal >= 275.0:
+                sellos.append("EXCESO EN CALORÍAS")
 
-        st.markdown("---")
-        st.subheader("Resultados del Rótulo y Evaluación Normativa:")
+            st.markdown("---")
+            st.subheader("Resultados del Rótulo y Evaluación Normativa:")
 
-        col_res1, col_res2 = st.columns([3, 2])
-        with col_res1:
-            st.markdown(f"#### **INFORMACIÓN NUTRICIONAL (Porción: {porcion:.0f} g)**")
-            st.table(pd.DataFrame({
-                "Nutriente": [
-                    "Valor energético", "Carbohidratos", "  de los cuales: Azúcares totales",
-                    "  Azúcares añadidos", "Proteínas", "Grasas totales", "Grasas saturadas",
-                    "Grasas trans", "Fibra alimentaria", "Sodio"
-                ],
-                "Cada 100 g": [
-                    f"{c_kcal:.0f} kcal = {c_kj:.0f} kJ", f"{c_cho:.1f} g", f"{c_az_tot:.1f} g",
-                    f"{c_az_anad:.1f} g", f"{c_prot:.1f} g", f"{c_gt:.1f} g", f"{c_gs:.1f} g",
-                    f"{c_gtr:.1f} g", f"{c_fib:.1f} g", f"{c_sod:.1f} mg"
-                ],
-                f"Por porción ({porcion:.0f} g)": [
-                    f"{p_kcal:.0f} kcal = {p_kj:.0f} kJ", f"{p_cho:.1f} g", f"{p_az_tot:.1f} g",
-                    f"{p_az_anad:.1f} g", f"{p_prot:.1f} g", f"{p_gt:.1f} g", f"{p_gs:.1f} g",
-                    f"{p_gtr:.1f} g", f"{p_fib:.1f} g", f"{p_sod:.1f} mg"
-                ],
-                "%VD*": [
-                    f"{vd_kcal}%", f"{vd_cho}%", "-", "-", f"{vd_prot}%", f"{vd_gt}%",
-                    f"{vd_gs}%", "-", f"{vd_fib}%", f"{vd_sod}%"
-                ]
-            }))
-            st.caption("*% Valores Diarios con base a una dieta de 2.000 kcal u 8.400 kJ (CAA Cap. V).")
+            col_res1, col_res2 = st.columns([3, 2])
+            with col_res1:
+                st.markdown(f"#### **INFORMACIÓN NUTRICIONAL (Porción: {porcion:.0f} g)**")
+                st.table(pd.DataFrame({
+                    "Nutriente": [
+                        "Valor energético", "Carbohidratos", "  de los cuales: Azúcares totales",
+                        "  Azúcares añadidos", "Proteínas", "Grasas totales", "Grasas saturadas",
+                        "Grasas trans", "Fibra alimentaria", "Sodio"
+                    ],
+                    "Cada 100 g": [
+                        f"{c_kcal:.0f} kcal = {c_kj:.0f} kJ", f"{c_cho:.1f} g", f"{c_az_tot:.1f} g",
+                        f"{c_az_anad:.1f} g", f"{c_prot:.1f} g", f"{c_gt:.1f} g", f"{c_gs:.1f} g",
+                        f"{c_gtr:.1f} g", f"{c_fib:.1f} g", f"{c_sod:.1f} mg"
+                    ],
+                    f"Por porción ({porcion:.0f} g)": [
+                        f"{p_kcal:.0f} kcal = {p_kj:.0f} kJ", f"{p_cho:.1f} g", f"{p_az_tot:.1f} g",
+                        f"{p_az_anad:.1f} g", f"{p_prot:.1f} g", f"{p_gt:.1f} g", f"{p_gs:.1f} g",
+                        f"{p_gtr:.1f} g", f"{p_fib:.1f} g", f"{p_sod:.1f} mg"
+                    ],
+                    "%VD*": [
+                        f"{vd_kcal}%", f"{vd_cho}%", "-", "-", f"{vd_prot}%", f"{vd_gt}%",
+                        f"{vd_gs}%", "-", f"{vd_fib}%", f"{vd_sod}%"
+                    ]
+                }))
+                st.caption("*% Valores Diarios con base a una dieta de 2.000 kcal u 8.400 kJ (CAA Cap. V).")
 
-        with col_res2:
-            st.markdown("### Sellos Frontales y Advertencias (Ley 27.642):")
-            if sellos:
-                for s in sellos:
-                    st.error(f"🛑 **{s}**")
-            else:
-                st.success("No requiere sellos de advertencia.")
+            with col_res2:
+                st.markdown("### Sellos Frontales y Advertencias (Ley 27.642):")
+                if sellos:
+                    for s in sellos:
+                        st.error(f"🛑 **{s}**")
+                else:
+                    st.success("No requiere sellos de advertencia.")
 
-            if tiene_edulcorante:
-                st.warning("⚠️ **CONTIENE EDULCORANTES, NO RECOMENDABLE EN NIÑOS/AS**")
-            if tiene_cafeina:
-                st.warning("⚠️ **CONTIENE CAFEÍNA, EVITAR EN NIÑOS/AS**")
+                if tiene_edulcorante:
+                    st.warning("⚠️ **CONTIENE EDULCORANTES, NO RECOMENDABLE EN NIÑOS/AS**")
+                if tiene_cafeina:
+                    st.warning("⚠️ **CONTIENE CAFEÍNA, EVITAR EN NIÑOS/AS**")
 
-        # HTML DE IMPRESIÓN CON LOGO ECOMEG
-        st.markdown("---")
-        st.subheader("🖨️ Informe Oficial de Rotulado para Impresión")
+            # HTML DE IMPRESIÓN CON LOGO ECOMEG
+            st.markdown("---")
+            st.subheader("🖨️ Informe Oficial de Rotulado para Impresión")
 
-        logo_b64 = obtener_logo_base64()
-        logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="max-height: 75px; object-fit: contain;" />' if logo_b64 else '<h2>Ecomeg®</h2>'
-        sellos_print = "".join([f'<span style="background-color: #000; color: #fff; padding: 5px 10px; margin-right: 5px; font-weight: bold; border-radius: 4px; display: inline-block;">🛑 {s}</span>' for s in sellos]) if sellos else '<p style="color: green; font-weight: bold;">Sin sellos obligatorios (Ley 27.642).</p>'
+            logo_b64 = obtener_logo_base64()
+            logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="max-height: 75px; object-fit: contain;" />' if logo_b64 else '<h2>Ecomeg®</h2>'
+            sellos_print = "".join([f'<span style="background-color: #000; color: #fff; padding: 5px 10px; margin-right: 5px; font-weight: bold; border-radius: 4px; display: inline-block;">🛑 {s}</span>' for s in sellos]) if sellos else '<p style="color: green; font-weight: bold;">Sin sellos obligatorios (Ley 27.642).</p>'
 
-        html_print = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; color: #222; }}
-                .box {{ max-width: 800px; margin: auto; border: 1px solid #ccc; padding: 25px; border-radius: 6px; }}
-                .top {{ display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2E7D32; padding-bottom: 10px; }}
-                table {{ width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }}
-                th, td {{ border: 1px solid #333; padding: 6px 8px; }}
-                th {{ background: #f2f2f2; text-align: left; }}
-                .btn-p {{ background: #2E7D32; color: #fff; border: none; padding: 10px 18px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }}
-                @media print {{ .btn-p {{ display: none; }} .box {{ border: none; padding: 0; }} }}
-            </style>
-        </head>
-        <body>
-            <div class="box">
-                <button class="btn-p" onclick="window.print()">🖨️ Imprimir / Guardar en PDF</button>
-                <div class="top">
-                    <div><h2 style="margin:0;">{nombre_prod}</h2><small>Dictamen Bromatológico Oficial - CAA Cap. V</small></div>
-                    <div>{logo_html}</div>
+            html_print = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body {{ font-family: Arial, sans-serif; margin: 20px; color: #222; }}
+                    .box {{ max-width: 800px; margin: auto; border: 1px solid #ccc; padding: 25px; border-radius: 6px; }}
+                    .top {{ display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2E7D32; padding-bottom: 10px; }}
+                    table {{ width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }}
+                    th, td {{ border: 1px solid #333; padding: 6px 8px; }}
+                    th {{ background: #f2f2f2; text-align: left; }}
+                    .btn-p {{ background: #2E7D32; color: #fff; border: none; padding: 10px 18px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-bottom: 15px; }}
+                    @media print {{ .btn-p {{ display: none; }} .box {{ border: none; padding: 0; }} }}
+                </style>
+            </head>
+            <body>
+                <div class="box">
+                    <button class="btn-p" onclick="window.print()">🖨️ Imprimir / Guardar en PDF</button>
+                    <div class="top">
+                        <div><h2 style="margin:0;">{prod_nombre_final}</h2><small>Dictamen Bromatológico Oficial - CAA Cap. V</small></div>
+                        <div>{logo_html}</div>
+                    </div>
+                    <p><strong>Peso Neto:</strong> {peso_cocido:.0f} g | <strong>Porción de referencia:</strong> {porcion:.0f} g</p>
+                    <table>
+                        <tr><th>Nutriente</th><th style="text-align:right;">Cada 100 g</th><th style="text-align:right;">Porción ({porcion:.0f} g)</th><th style="text-align:center;">% VD*</th></tr>
+                        <tr><td><strong>Valor energético</strong></td><td style="text-align:right;">{c_kcal:.0f} kcal = {c_kj:.0f} kJ</td><td style="text-align:right;">{p_kcal:.0f} kcal = {p_kj:.0f} kJ</td><td style="text-align:center;">{vd_kcal}%</td></tr>
+                        <tr><td><strong>Carbohidratos</strong></td><td style="text-align:right;">{c_cho:.1f} g</td><td style="text-align:right;">{p_cho:.1f} g</td><td style="text-align:center;">{vd_cho}%</td></tr>
+                        <tr><td style="padding-left:15px;">de los cuales: Azúcares totales</td><td style="text-align:right;">{c_az_tot:.1f} g</td><td style="text-align:right;">{p_az_tot:.1f} g</td><td style="text-align:center;">-</td></tr>
+                        <tr><td style="padding-left:15px;">Azúcares añadidos</td><td style="text-align:right;">{c_az_anad:.1f} g</td><td style="text-align:right;">{p_az_anad:.1f} g</td><td style="text-align:center;">-</td></tr>
+                        <tr><td><strong>Proteínas</strong></td><td style="text-align:right;">{c_prot:.1f} g</td><td style="text-align:right;">{p_prot:.1f} g</td><td style="text-align:center;">{vd_prot}%</td></tr>
+                        <tr><td><strong>Grasas totales</strong></td><td style="text-align:right;">{c_gt:.1f} g</td><td style="text-align:right;">{p_gt:.1f} g</td><td style="text-align:center;">{vd_gt}%</td></tr>
+                        <tr><td style="padding-left:15px;">Grasas saturadas</td><td style="text-align:right;">{c_gs:.1f} g</td><td style="text-align:right;">{p_gs:.1f} g</td><td style="text-align:center;">{vd_gs}%</td></tr>
+                        <tr><td style="padding-left:15px;">Grasas trans</td><td style="text-align:right;">{c_gtr:.1f} g</td><td style="text-align:right;">{p_gtr:.1f} g</td><td style="text-align:center;">-</td></tr>
+                        <tr><td><strong>Fibra alimentaria</strong></td><td style="text-align:right;">{c_fib:.1f} g</td><td style="text-align:right;">{p_fib:.1f} g</td><td style="text-align:center;">{vd_fib}%</td></tr>
+                        <tr><td><strong>Sodio</strong></td><td style="text-align:right;">{c_sod:.1f} mg</td><td style="text-align:right;">{p_sod:.1f} mg</td><td style="text-align:center;">{vd_sod}%</td></tr>
+                    </table>
+                    <h4 style="margin-top:20px;">Sellos de Advertencia (Ley 27.642)</h4>
+                    <div>{sellos_print}</div>
                 </div>
-                <p><strong>Peso Neto:</strong> {peso_cocido:.0f} g | <strong>Porción de referencia:</strong> {porcion:.0f} g</p>
-                <table>
-                    <tr><th>Nutriente</th><th style="text-align:right;">Cada 100 g</th><th style="text-align:right;">Porción ({porcion:.0f} g)</th><th style="text-align:center;">% VD*</th></tr>
-                    <tr><td><strong>Valor energético</strong></td><td style="text-align:right;">{c_kcal:.0f} kcal = {c_kj:.0f} kJ</td><td style="text-align:right;">{p_kcal:.0f} kcal = {p_kj:.0f} kJ</td><td style="text-align:center;">{vd_kcal}%</td></tr>
-                    <tr><td><strong>Carbohidratos</strong></td><td style="text-align:right;">{c_cho:.1f} g</td><td style="text-align:right;">{p_cho:.1f} g</td><td style="text-align:center;">{vd_cho}%</td></tr>
-                    <tr><td style="padding-left:15px;">de los cuales: Azúcares totales</td><td style="text-align:right;">{c_az_tot:.1f} g</td><td style="text-align:right;">{p_az_tot:.1f} g</td><td style="text-align:center;">-</td></tr>
-                    <tr><td style="padding-left:15px;">Azúcares añadidos</td><td style="text-align:right;">{c_az_anad:.1f} g</td><td style="text-align:right;">{p_az_anad:.1f} g</td><td style="text-align:center;">-</td></tr>
-                    <tr><td><strong>Proteínas</strong></td><td style="text-align:right;">{c_prot:.1f} g</td><td style="text-align:right;">{p_prot:.1f} g</td><td style="text-align:center;">{vd_prot}%</td></tr>
-                    <tr><td><strong>Grasas totales</strong></td><td style="text-align:right;">{c_gt:.1f} g</td><td style="text-align:right;">{p_gt:.1f} g</td><td style="text-align:center;">{vd_gt}%</td></tr>
-                    <tr><td style="padding-left:15px;">Grasas saturadas</td><td style="text-align:right;">{c_gs:.1f} g</td><td style="text-align:right;">{p_gs:.1f} g</td><td style="text-align:center;">{vd_gs}%</td></tr>
-                    <tr><td style="padding-left:15px;">Grasas trans</td><td style="text-align:right;">{c_gtr:.1f} g</td><td style="text-align:right;">{p_gtr:.1f} g</td><td style="text-align:center;">-</td></tr>
-                    <tr><td><strong>Fibra alimentaria</strong></td><td style="text-align:right;">{c_fib:.1f} g</td><td style="text-align:right;">{p_fib:.1f} g</td><td style="text-align:center;">{vd_fib}%</td></tr>
-                    <tr><td><strong>Sodio</strong></td><td style="text-align:right;">{c_sod:.1f} mg</td><td style="text-align:right;">{p_sod:.1f} mg</td><td style="text-align:center;">{vd_sod}%</td></tr>
-                </table>
-                <h4 style="margin-top:20px;">Sellos de Advertencia (Ley 27.642)</h4>
-                <div>{sellos_print}</div>
-            </div>
-        </body>
-        </html>
-        """
-        st.components.v1.html(html_print, height=600, scrolling=True)
+            </body>
+            </html>
+            """
+            st.components.v1.html(html_print, height=600, scrolling=True)
 
 # ==========================================
 # PESTAÑA 2: ASISTENTE TÉCNICO REGULATORIO
