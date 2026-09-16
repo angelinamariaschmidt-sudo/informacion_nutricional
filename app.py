@@ -521,7 +521,7 @@ with tab2:
                         "x-goog-api-key": api_key
                     }
                     
-                    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+                    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent"
                     body = {
                         "contents": [{"parts": [{"text": pregunta}]}],
                         "systemInstruction": {
