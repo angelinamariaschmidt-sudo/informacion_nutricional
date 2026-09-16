@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import requests
+import os
 
 st.set_page_config(page_title="Plataforma Bromatológica - Rotulado y Sellos", layout="wide")
 
@@ -33,24 +34,26 @@ if st.sidebar.button("Cerrar sesión"):
 tab1, tab2 = st.tabs(["📊 Calculadora Nutricional & Sellos", "💬 Asistente Técnico Normativo"])
 
 # ==========================================
-# BASE DE DATOS DE COMPOSICIÓN (ARGENFOODS / CAA)
+# CARGA DE BASE DE DATOS SARA 2
 # ==========================================
-BASE_ALIMENTOS = {
-    "Harina de trigo 000": {"kcal": 350.0, "azucar_anadido": 0.0, "grasa_tot": 1.2, "grasa_sat": 0.3, "sodio": 2.0, "edulcorante": False, "cafeina": False},
-    "Harina de trigo 0000": {"kcal": 353.0, "azucar_anadido": 0.0, "grasa_tot": 0.9, "grasa_sat": 0.2, "sodio": 2.0, "edulcorante": False, "cafeina": False},
-    "Azúcar común": {"kcal": 390.0, "azucar_anadido": 100.0, "grasa_tot": 0.0, "grasa_sat": 0.0, "sodio": 1.0, "edulcorante": False, "cafeina": False},
-    "Aceite de girasol": {"kcal": 900.0, "azucar_anadido": 0.0, "grasa_tot": 100.0, "grasa_sat": 11.0, "sodio": 0.0, "edulcorante": False, "cafeina": False},
-    "Aceite de maíz": {"kcal": 900.0, "azucar_anadido": 0.0, "grasa_tot": 100.0, "grasa_sat": 13.0, "sodio": 0.0, "edulcorante": False, "cafeina": False},
-    "Grasa vacuna refinada": {"kcal": 890.0, "azucar_anadido": 0.0, "grasa_tot": 99.0, "grasa_sat": 48.0, "sodio": 0.0, "edulcorante": False, "cafeina": False},
-    "Margarina vegetal": {"kcal": 720.0, "azucar_anadido": 0.0, "grasa_tot": 80.0, "grasa_sat": 20.0, "sodio": 150.0, "edulcorante": False, "cafeina": False},
-    "Manteca": {"kcal": 740.0, "azucar_anadido": 0.0, "grasa_tot": 82.0, "grasa_sat": 52.0, "sodio": 15.0, "edulcorante": False, "cafeina": False},
-    "Sal común (Cloruro de sodio)": {"kcal": 0.0, "azucar_anadido": 0.0, "grasa_tot": 0.0, "grasa_sat": 0.0, "sodio": 38758.0, "edulcorante": False, "cafeina": False},
-    "Agua potable": {"kcal": 0.0, "azucar_anadido": 0.0, "grasa_tot": 0.0, "grasa_sat": 0.0, "sodio": 5.0, "edulcorante": False, "cafeina": False},
-    "Huevo entero": {"kcal": 150.0, "azucar_anadido": 0.0, "grasa_tot": 10.0, "grasa_sat": 3.1, "sodio": 140.0, "edulcorante": False, "cafeina": False},
-    "Leche entera líquida": {"kcal": 60.0, "azucar_anadido": 0.0, "grasa_tot": 3.0, "grasa_sat": 1.9, "sodio": 50.0, "edulcorante": False, "cafeina": False},
-    "Cacao en polvo": {"kcal": 320.0, "azucar_anadido": 0.0, "grasa_tot": 12.0, "grasa_sat": 7.0, "sodio": 20.0, "edulcorante": False, "cafeina": True},
-    "Edulcorante no calórico (ej. Estevia)": {"kcal": 0.0, "azucar_anadido": 0.0, "grasa_tot": 0.0, "grasa_sat": 0.0, "sodio": 10.0, "edulcorante": True, "cafeina": False}
-}
+@st.cache_data
+def cargar_base_alimentos():
+    archivo_csv = "sara2_alimentos.csv"
+    if os.path.exists(archivo_csv):
+        df = pd.read_csv(archivo_csv)
+        df["alimento"] = df["alimento"].astype(str)
+        return df.sort_values(by="alimento")
+    else:
+        # Respaldo básico si el CSV no estuviera
+        data_default = [
+            {"alimento": "Harina de trigo 000 fortificada", "kcal": 329.0, "azucar_anadido": 0.0, "grasa_tot": 1.0, "grasa_sat": 0.16, "sodio": 7.0, "edulcorante": False, "cafeina": False},
+            {"alimento": "Aceite de girasol", "kcal": 900.0, "azucar_anadido": 0.0, "grasa_tot": 100.0, "grasa_sat": 10.6, "sodio": 0.0, "edulcorante": False, "cafeina": False},
+            {"alimento": "Azúcar blanca refinada", "kcal": 400.0, "azucar_anadido": 99.8, "grasa_tot": 0.0, "grasa_sat": 0.0, "sodio": 1.0, "edulcorante": False, "cafeina": False},
+            {"alimento": "Sal fina común (NaCl)", "kcal": 0.0, "azucar_anadido": 0.0, "grasa_tot": 0.0, "grasa_sat": 0.0, "sodio": 40000.0, "edulcorante": False, "cafeina": False}
+        ]
+        return pd.DataFrame(data_default)
+
+df_sara = cargar_base_alimentos()
 
 # ==========================================
 # PESTAÑA 1: CALCULADORA NUTRICIONAL
@@ -64,40 +67,41 @@ with tab1:
     with col_b:
         porcion = st.number_input("Tamaño de la porción según CAA (g)", min_value=1.0, value=50.0)
 
-    st.subheader("1. Agregar ingrediente desde la base de datos")
+    st.subheader(f"1. Seleccionar ingrediente (Base SARA 2: {len(df_sara)} disponibles)")
     col1, col2, col3 = st.columns([3, 2, 1])
     with col1:
-        ing_elegido = st.selectbox("Seleccionar ingrediente:", list(BASE_ALIMENTOS.keys()))
+        ing_elegido = st.selectbox("Escribí o elegí de la lista:", df_sara["alimento"].tolist())
     with col2:
-        gramos_ing = st.number_input("Cantidad (gramos):", min_value=1.0, value=100.0, step=5.0)
+        gramos_ing = st.number_input("Cantidad a formular (gramos):", min_value=0.1, value=100.0, step=5.0)
     with col3:
         st.write("")
         st.write("")
         if st.button("➕ Agregar a la receta"):
             if "receta" not in st.session_state:
                 st.session_state.receta = []
-            datos = BASE_ALIMENTOS[ing_elegido]
+            row = df_sara[df_sara["alimento"] == ing_elegido].iloc[0]
             st.session_state.receta.append({
                 "Ingrediente": ing_elegido,
                 "Gramos": float(gramos_ing),
-                "Kcal/100g": datos["kcal"],
-                "Azúcar_Añadido_g": datos["azucar_anadido"],
-                "Grasa_Tot_g": datos["grasa_tot"],
-                "Grasa_Sat_g": datos["grasa_sat"],
-                "Sodio_mg": datos["sodio"],
-                "Edulcorante": datos["edulcorante"],
-                "Cafeina": datos["cafeina"]
+                "Kcal/100g": float(row["kcal"]),
+                "Azúcar_Añadido_g": float(row["azucar_anadido"]),
+                "Grasa_Tot_g": float(row["grasa_tot"]),
+                "Grasa_Sat_g": float(row["grasa_sat"]),
+                "Sodio_mg": float(row["sodio"]),
+                "Edulcorante": bool(row["edulcorante"]),
+                "Cafeina": bool(row["cafeina"])
             })
             st.rerun()
 
+    # Receta inicial por defecto si está vacía
     if "receta" not in st.session_state:
         st.session_state.receta = [
-            {"Ingrediente": "Harina de trigo 000", "Gramos": 300.0, "Kcal/100g": 350.0, "Azúcar_Añadido_g": 0.0, "Grasa_Tot_g": 1.2, "Grasa_Sat_g": 0.3, "Sodio_mg": 2.0, "Edulcorante": False, "Cafeina": False},
-            {"Ingrediente": "Sal común (Cloruro de sodio)", "Gramos": 10.0, "Kcal/100g": 0.0, "Azúcar_Añadido_g": 0.0, "Grasa_Tot_g": 0.0, "Grasa_Sat_g": 0.0, "Sodio_mg": 38758.0, "Edulcorante": False, "Cafeina": False},
-            {"Ingrediente": "Grasa vacuna refinada", "Gramos": 80.0, "Kcal/100g": 890.0, "Azúcar_Añadido_g": 0.0, "Grasa_Tot_g": 99.0, "Grasa_Sat_g": 48.0, "Sodio_mg": 0.0, "Edulcorante": False, "Cafeina": False}
+            {"Ingrediente": "Harina de trigo 000 fortificada", "Gramos": 300.0, "Kcal/100g": 329.0, "Azúcar_Añadido_g": 0.0, "Grasa_Tot_g": 1.0, "Grasa_Sat_g": 0.16, "Sodio_mg": 7.0, "Edulcorante": False, "Cafeina": False},
+            {"Ingrediente": "Sal fina común (NaCl)", "Gramos": 10.0, "Kcal/100g": 0.0, "Azúcar_Añadido_g": 0.0, "Grasa_Tot_g": 0.0, "Grasa_Sat_g": 0.0, "Sodio_mg": 40000.0, "Edulcorante": False, "Cafeina": False},
+            {"Ingrediente": "Grasa vacuna refinada", "Gramos": 80.0, "Kcal/100g": 899.0, "Azúcar_Añadido_g": 0.0, "Grasa_Tot_g": 99.9, "Grasa_Sat_g": 49.8, "Sodio_mg": 0.0, "Edulcorante": False, "Cafeina": False}
         ]
 
-    st.subheader("2. Formulación actual (editable)")
+    st.subheader("2. Formulación del producto (tabla editable)")
     df_actual = pd.DataFrame(st.session_state.receta)
     df_editado = st.data_editor(df_actual, num_rows="dynamic", use_container_width=True)
 
@@ -105,7 +109,7 @@ with tab1:
     with col_btn1:
         calcular = st.button("Calcular Tabla y Sellos", type="primary")
     with col_btn2:
-        if st.button("Vaciar receta"):
+        if st.button("Vaciar formulación"):
             st.session_state.receta = []
             st.rerun()
 
@@ -132,6 +136,7 @@ with tab1:
         p_kj = c_kj * porcion / 100.0
         vd_kcal = round((p_kcal / 2000.0) * 100)
 
+        # Sellos Frontales Ley 27.642 (Etapa 2 definitiva)
         sellos = []
         if c_azucar > 0 and c_kcal > 0 and ((c_azucar * 4.0) / c_kcal) >= 0.10:
             sellos.append("EXCESO EN AZÚCARES")
@@ -145,19 +150,19 @@ with tab1:
             sellos.append("EXCESO EN CALORÍAS")
 
         st.markdown("---")
-        st.subheader("Resultados del Rotulado Nutricional:")
+        st.subheader("Resultados del Rótulo Nutricional:")
         r1, r2 = st.columns(2)
         with r1:
-            st.markdown("#### Declaración de Valor Energético")
+            st.markdown("#### Valor Energético (CAA Cap. V)")
             st.markdown(f"• **Cada 100 g:** {c_kcal:.0f} kcal = {c_kj:.0f} kJ")
             st.markdown(f"• **Por porción ({porcion:.0f} g):** {p_kcal:.0f} kcal = {p_kj:.0f} kJ (%VD: {vd_kcal}%)")
-            st.markdown("#### Nutrientes Críticos")
+            st.markdown("#### Nutrientes Críticos (Ley 27.642)")
             st.markdown(f"• **Azúcares añadidos (100 g):** {c_azucar:.1f} g")
             st.markdown(f"• **Grasas Totales (100 g):** {c_grasa_tot:.1f} g")
             st.markdown(f"• **Grasas Saturadas (100 g):** {c_grasa_sat:.1f} g")
             st.markdown(f"• **Sodio (100 g):** {c_sodio:.1f} mg")
         with r2:
-            st.markdown("### Sellos Frontales Obligatorios:")
+            st.markdown("### Sellos Frontales y Leyendas Obligatorias:")
             if sellos:
                 for s in sellos:
                     st.error(f"🛑 **{s}**")
@@ -199,30 +204,19 @@ with tab2:
                         "Content-Type": "application/json",
                         "x-goog-api-key": api_key
                     }
-                    
-                    # 1. Obtener lista de modelos soportados directamente desde Google
                     list_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
                     list_res = requests.get(list_url, timeout=10)
                     
                     modelo_a_usar = None
                     if list_res.status_code == 200:
-                        modelos_disponibles = list_res.json().get("models", [])
-                        # Buscar el modelo que soporte generar contenido
-                        for m in modelos_disponibles:
-                            metodos = m.get("supportedGenerationMethods", [])
-                            if "generateContent" in metodos and "flash" in m.get("name", ""):
+                        modelos = list_res.json().get("models", [])
+                        for m in modelos:
+                            if "generateContent" in m.get("supportedGenerationMethods", []) and "flash" in m.get("name", ""):
                                 modelo_a_usar = m.get("name")
                                 break
-                        if not modelo_a_usar and modelos_disponibles:
-                            for m in modelos_disponibles:
-                                if "generateContent" in m.get("supportedGenerationMethods", []):
-                                    modelo_a_usar = m.get("name")
-                                    break
-                    
                     if not modelo_a_usar:
                         modelo_a_usar = "models/gemini-2.5-flash"
 
-                    # 2. Llamada con el modelo detectado
                     url = f"https://generativelanguage.googleapis.com/v1beta/{modelo_a_usar}:generateContent"
                     body = {
                         "contents": [{"parts": [{"text": pregunta}]}],
@@ -240,7 +234,7 @@ with tab2:
                         data = r.json()
                         respuesta_texto = data["candidates"][0]["content"]["parts"][0]["text"]
                     else:
-                        respuesta_texto = f"Error {r.status_code} ({modelo_a_usar}): {r.text}"
+                        respuesta_texto = f"Error {r.status_code}: {r.text}"
                 except Exception as e:
                     respuesta_texto = f"Error al procesar la solicitud: {str(e)}"
 
