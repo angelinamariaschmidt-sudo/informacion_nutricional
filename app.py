@@ -14,20 +14,34 @@ st.set_page_config(page_title="Plataforma Bromatológica - Ecomeg", layout="wide
 # --- CONEXIÓN A GOOGLE SHEETS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
+def normalizar_col(c):
+    return ''.join(ch for ch in unicodedata.normalize('NFD', str(c).strip().lower()) if unicodedata.category(ch) != 'Mn')
+
 def obtener_usuarios():
     try:
         df = conn.read(worksheet="usuarios", ttl="0s")
-        return df.dropna(how="all")
-    except Exception:
-        return pd.DataFrame(columns=["usuario", "clave", "rol", "token_sesion", "estado"])
+        if df is not None and not df.empty:
+            df = df.dropna(how="all")
+            # Normaliza nombres de columnas a minúsculas y sin espacios
+            df.columns = [normalizar_col(c) for c in df.columns]
+            return df
+    except Exception as e:
+        st.warning(f"Aviso de lectura en Google Sheets: {e}")
+    return pd.DataFrame(columns=["usuario", "clave", "rol", "token_sesion", "estado"])
 
 def registrar_evento(usuario, accion, detalle=""):
     try:
         ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        df_met = conn.read(worksheet="metricas", ttl="0s").dropna(how="all")
+        df_met = conn.read(worksheet="metricas", ttl="0s")
+        if df_met is not None and not df_met.empty:
+            df_met = df_met.dropna(how="all")
+            df_met.columns = [normalizar_col(c) for c in df_met.columns]
+        else:
+            df_met = pd.DataFrame(columns=["fecha_hora", "usuario", "accion", "detalle"])
+        
         nueva_fila = pd.DataFrame([{"fecha_hora": ahora, "usuario": usuario, "accion": accion, "detalle": detalle}])
-        df_actualizado = pd.concat([df_met, nueva_fila], ignore_index=True)
-        conn.update(worksheet="metricas", data=df_actualizado)
+        df_act = pd.concat([df_met, nueva_fila], ignore_index=True)
+        conn.update(worksheet="metricas", data=df_act)
     except Exception:
         pass
 
@@ -40,31 +54,48 @@ if "autenticado" not in st.session_state:
 
 def login():
     st.markdown("### Acceso Exclusivo - Plataforma Bromatológica Ecomeg®")
-    u_ingresado = st.text_input("Usuario")
-    c_ingresada = st.text_input("Contraseña", type="password")
+    u_ing = st.text_input("Usuario")
+    c_ing = st.text_input("Contraseña", type="password")
 
     if st.button("Iniciar Sesión"):
-        df_usuarios = obtener_usuarios()
-        coincidencia = df_usuarios[(df_usuarios["usuario"] == u_ingresado) & (df_usuarios["clave"] == c_ingresada)]
+        df_u = obtener_usuarios()
+        
+        if "usuario" not in df_u.columns or "clave" not in df_u.columns:
+            st.error(f"Estructura inválida en la pestaña 'usuarios'. Columnas detectadas: {list(df_u.columns)}. Deben llamarse: usuario, clave, rol, token_sesion, estado.")
+            return
+
+        # Búsqueda insensible a mayúsculas y espacios
+        u_limpio = str(u_ing).strip().lower()
+        c_limpio = str(c_ing).strip()
+        
+        filtro = (df_u["usuario"].astype(str).str.strip().str.lower() == u_limpio) & (df_u["clave"].astype(str).str.strip() == c_limpio)
+        coincidencia = df_u[filtro]
 
         if not coincidencia.empty:
             fila = coincidencia.iloc[0]
-            if str(fila.get("estado", "")).lower() == "activo":
+            estado_cuenta = str(fila.get("estado", "activo")).strip().lower()
+            
+            if estado_cuenta == "activo":
                 nuevo_token = str(uuid.uuid4())
+                rol_usuario = str(fila.get("rol", "cliente")).strip().lower()
+
                 st.session_state.autenticado = True
-                st.session_state.usuario = u_ingresado
-                st.session_state.rol = str(fila.get("rol", "cliente")).lower()
+                st.session_state.usuario = str(fila.get("usuario")).strip()
+                st.session_state.rol = rol_usuario
                 st.session_state.token = nuevo_token
 
-                # Los clientes registran token único en la hoja para invalidar sesiones previas
-                if st.session_state.rol != "admin":
-                    df_usuarios.loc[df_usuarios["usuario"] == u_ingresado, "token_sesion"] = nuevo_token
-                    conn.update(worksheet="usuarios", data=df_usuarios)
+                # Sesión única: actualiza token remoto para clientes
+                if rol_usuario != "admin":
+                    df_u.loc[filtro, "token_sesion"] = nuevo_token
+                    try:
+                        conn.update(worksheet="usuarios", data=df_u)
+                    except Exception:
+                        pass
 
-                registrar_evento(u_ingresado, "Inicio de sesión", f"Rol: {st.session_state.rol}")
+                registrar_evento(st.session_state.usuario, "Inicio de sesión", f"Rol: {rol_usuario}")
                 st.rerun()
             else:
-                st.error("Su suscripción se encuentra inactiva. Contacte al administrador.")
+                st.error("Suscripción inactiva. Comuníquese con la administración.")
         else:
             st.error("Usuario o clave incorrectos.")
 
@@ -72,44 +103,47 @@ if not st.session_state.autenticado:
     login()
     st.stop()
 
-# Validación continua de sesión única para clientes
+# Verificación de concurrencia para clientes
 if st.session_state.rol != "admin":
-    df_actual = obtener_usuarios()
-    token_remoto = df_actual.loc[df_actual["usuario"] == st.session_state.usuario, "token_sesion"].values
-    if len(token_remoto) > 0 and str(token_remoto[0]) != str(st.session_state.token):
-        st.session_state.autenticado = False
-        st.error("Se inició sesión con esta cuenta en otro dispositivo. Esta sesión fue cerrada.")
-        st.stop()
+    df_verif = obtener_usuarios()
+    if "usuario" in df_verif.columns and "token_sesion" in df_verif.columns:
+        match_u = df_verif[df_verif["usuario"].astype(str).str.strip().str.lower() == st.session_state.usuario.lower()]
+        if not match_u.empty:
+            token_en_base = str(match_u.iloc[0].get("token_sesion", ""))
+            if token_en_base and token_en_base != st.session_state.token:
+                st.session_state.autenticado = False
+                st.error("Se detectó un nuevo inicio de sesión con esta cuenta en otro equipo. Esta sesión fue finalizada.")
+                st.stop()
 
 # --- BARRA LATERAL ---
-st.sidebar.markdown(f"**Conectado:** `{st.session_state.usuario}`")
-st.sidebar.markdown(f"**Nivel de acceso:** `{'Administrador' if st.session_state.rol == 'admin' else 'Licencia Individual'}`")
+st.sidebar.markdown(f"**Usuario:** `{st.session_state.usuario}`")
+st.sidebar.markdown(f"**Perfil:** `{'Administrador' if st.session_state.rol == 'admin' else 'Cliente'}`")
 if st.sidebar.button("Cerrar Sesión"):
     registrar_evento(st.session_state.usuario, "Cierre de sesión")
     st.session_state.autenticado = False
     st.rerun()
 
-# --- GESTIÓN DE PESTAÑAS (ADMIN VS CLIENTE) ---
+# --- PESTAÑAS SEGÚN ROL ---
 if st.session_state.rol == "admin":
-    tab1, tab2, tab3 = st.tabs(["📊 Calculadora & Sellos", "💬 Asistente Técnico", "📈 Panel de Auditoría (Admin)"])
+    tab1, tab2, tab3 = st.tabs(["📊 Calculadora & Sellos", "💬 Asistente Técnico", "📈 Auditoría y Clientes"])
 else:
     tab1, tab2 = st.tabs(["📊 Calculadora & Sellos", "💬 Asistente Técnico"])
 
-def normalizar(texto):
-    if not texto:
+def normalizar_texto(t):
+    if not t:
         return ""
-    return ''.join(c for c in unicodedata.normalize('NFD', str(texto).lower()) if unicodedata.category(c) != 'Mn')
+    return ''.join(c for c in unicodedata.normalize('NFD', str(t).lower()) if unicodedata.category(c) != 'Mn')
 
-def obtener_imagen_base64():
-    posibles = ["Logo ECOMEG Transparente.png", "Logo ECOMEG Transparente.PNG", "logo_ecomeg.png", "ecomeg (R).png"]
-    for nom in posibles:
-        if os.path.exists(nom):
-            with open(nom, "rb") as f:
+def obtener_logo_base64():
+    archivos = ["Logo ECOMEG Transparente.png", "Logo ECOMEG Transparente.PNG", "logo_ecomeg.png", "ecomeg (R).png"]
+    for arch in archivos:
+        if os.path.exists(arch):
+            with open(arch, "rb") as f:
                 return base64.b64encode(f.read()).decode()
     return ""
 
 # ==============================================================================
-# BASE DE DATOS SARA 2 (Oficial)
+# BASE SARA 2 COMPLETA
 # ==============================================================================
 SARA2_DICT = {
     "Aceite de girasol": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 10.6, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
@@ -143,25 +177,25 @@ with tab1:
 
     col_p1, col_p2, col_p3 = st.columns([2, 1, 1])
     with col_p1:
-        nombre_prod = st.text_input("Denominación del producto:", value="Pasta Seca al Huevo")
+        nombre_prod = st.text_input("Denominación de venta del producto:", value="Pasta Seca al Huevo")
     with col_p2:
-        peso_cocido = st.number_input("Peso neto tras cocción (g)", min_value=1.0, value=500.0)
+        peso_cocido = st.number_input("Peso neto final (g)", min_value=1.0, value=500.0)
     with col_p3:
-        porcion = st.number_input("Porción reglamentaria (g)", min_value=1.0, value=80.0)
+        porcion = st.number_input("Porción CAA (g)", min_value=1.0, value=80.0)
 
     st.markdown("---")
-    st.subheader("1. Búsqueda de Ingredientes (Prioridad: SARA 2)")
+    st.subheader("1. Selección de Ingredientes (SARA 2)")
     c_f1, c_f2 = st.columns([2, 3])
     with c_f1:
-        filtro_txt = st.text_input("Filtrar alimento:", placeholder="Ej: semola, aceite, acelga...")
+        filtro_txt = st.text_input("Buscar insumo:", placeholder="Ej: semola, aceite, acelga...")
 
     if filtro_txt.strip():
-        opciones = [a for a in lista_alimentos_completa if normalizar(filtro_txt) in normalizar(a)]
+        opciones = [a for a in lista_alimentos_completa if normalizar_texto(filtro_txt) in normalizar_texto(a)]
     else:
         opciones = lista_alimentos_completa
 
     with c_f2:
-        ing_elegido = st.selectbox("Coincidencias en SARA 2:", opciones) if opciones else None
+        ing_elegido = st.selectbox("Alimentos SARA 2 disponibles:", opciones) if opciones else None
 
     if ing_elegido:
         c_g1, c_g2 = st.columns([3, 1])
@@ -183,7 +217,7 @@ with tab1:
                 st.rerun()
 
     st.markdown("---")
-    st.subheader("2. Formulación activa")
+    st.subheader("2. Formulación actual")
     df_ed = st.data_editor(pd.DataFrame(st.session_state.receta), num_rows="dynamic", use_container_width=True)
 
     c_b1, c_b2 = st.columns([2, 8])
@@ -258,8 +292,8 @@ with tab1:
             else:
                 st.success("Sin sellos de advertencia.")
 
-        # Generador HTML con Logo Ecomeg
-        logo_b64 = obtener_imagen_base64()
+        # HTML de impresión con Logo Ecomeg
+        logo_b64 = obtener_logo_base64()
         logo_tag = f'<img src="data:image/png;base64,{logo_b64}" style="max-height: 70px; object-fit: contain;" />' if logo_b64 else '<h2>Ecomeg®</h2>'
         html_informe = f"""
         <div style="font-family: sans-serif; max-width: 750px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 6px;">
