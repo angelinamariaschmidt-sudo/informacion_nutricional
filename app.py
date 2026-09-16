@@ -41,10 +41,21 @@ def normalizar(texto):
         return ""
     return ''.join(c for c in unicodedata.normalize('NFD', str(texto).lower()) if unicodedata.category(c) != 'Mn')
 
-def obtener_imagen_base64(ruta_imagen):
-    if os.path.exists(ruta_imagen):
-        with open(ruta_imagen, "rb") as img_file:
-            return base64.b64encode(img_file.read()).decode()
+def obtener_imagen_base64():
+    # Nombres posibles con los que pudo haberse subido el archivo a GitHub
+    posibles_nombres = [
+        "Logo ECOMEG Transparente.png",
+        "Logo ECOMEG Transparente.PNG",
+        "Logo Ecomeg Transparente.png",
+        "logo_ecomeg.png",
+        "ecomeg (R).png",
+        "Logo ECOMEG Transparente.jpg",
+        "Logo ECOMEG Transparente.jpeg"
+    ]
+    for nombre in posibles_nombres:
+        if os.path.exists(nombre):
+            with open(nombre, "rb") as img_file:
+                return base64.b64encode(img_file.read()).decode()
     return ""
 
 # ==============================================================================
@@ -149,7 +160,7 @@ with tab1:
 
     with c_f2:
         if opciones_filtradas:
-            ing_elegido = st.selectbox(f"Ingredientes disponibles ({len(opciones_filtradas)} encontrados):", opciones_filtradas)
+            ing_elegido = st.selectbox(f"Ingredientes de SARA 2 ({len(opciones_filtradas)} encontrados):", opciones_filtradas)
         else:
             st.warning("No encontrado en SARA 2. Utilizá los buscadores de referencia externa abajo.")
             ing_elegido = None
@@ -426,11 +437,11 @@ with tab1:
         st.markdown("---")
         st.subheader("🖨️ Informe Oficial de Rotulado Nutricional para Impresión")
 
-        logo_b64 = obtener_imagen_base64("logo_ecomeg.png")
+        logo_b64 = obtener_imagen_base64()
         if logo_b64:
-            logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="max-height: 80px; margin-bottom: 15px;" />'
+            logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="max-height: 75px; width: auto; object-fit: contain; margin-bottom: 10px;" />'
         else:
-            logo_html = '<h2 style="color: #2E7D32; margin: 0;">Ecomeg®</h2>'
+            logo_html = '<h2 style="color: #2E7D32; margin: 0; font-family: sans-serif;">Ecomeg®</h2>'
 
         sellos_html = ""
         if sellos:
@@ -541,10 +552,10 @@ with tab1:
         </html>
         """
 
-        # Vista previa interactiva en la app
+        # Vista previa interactiva
         st.components.v1.html(plantilla_html, height=850, scrolling=True)
 
-        # Botón para descargar el archivo HTML autoejecutable
+        # Botón para descargar archivo HTML
         st.download_button(
             label="💾 Descargar Rótulo en formato HTML Imprimible (con Logo Ecomeg)",
             data=plantilla_html,
