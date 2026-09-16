@@ -1,0 +1,286 @@
+alimento,kcal,azucar_anadido,grasa_tot,grasa_sat,sodio,edulcorante,cafeina
+"Acelga, cruda",18.0,0.0,0.2,0.03,213.0,False,False
+"Acelga, hervida",16.0,0.0,0.1,0.01,179.0,False,False
+"Acelga, pencas, crudas",8.0,0.0,0.1,0.02,150.0,False,False
+"Acelga, pencas, hervidas",8.0,0.0,0.1,0.02,150.0,False,False
+"Achicoria, cruda",12.0,0.0,0.3,0.07,45.0,False,False
+"Achicoria, hervida",12.0,0.0,0.3,0.07,45.0,False,False
+"Ají en conserva",20.0,0.0,0.3,0.05,14.0,False,False
+"Ají rojo / morrón rojo, crudo",22.0,0.0,0.3,0.06,4.0,False,False
+"Ají rojo / morrón rojo, rehogado",17.0,0.0,0.2,0.06,4.0,False,False
+"Ají verde o amarillo, crudo",22.0,0.0,0.3,0.06,3.0,False,False
+"Ají verde o amarillo, rehogado",17.0,0.0,0.2,0.06,3.0,False,False
+"Ajo, crudo",91.0,0.0,0.2,0.09,17.0,False,False
+"Albahaca, cruda",23.0,0.0,0.6,0.04,4.0,False,False
+"Alcaparras, encurtido",24.0,0.0,0.9,0.23,2348.0,False,False
+"Alcaucil, crudo",41.0,0.0,0.4,0.04,94.0,False,False
+"Alcaucil, hervido",40.0,0.0,0.3,0.08,94.0,False,False
+"Apio, crudo",10.0,0.0,0.2,0.04,80.0,False,False
+"Apio, hervido",14.0,0.0,0.2,0.04,91.0,False,False
+"Arveja, enlatada",104.0,0.0,0.8,0.04,88.0,False,False
+"Arveja, fresca, cruda",83.0,0.0,0.4,0.07,38.0,False,False
+"Arveja, fresca, hervida",64.0,0.0,0.2,0.04,38.0,False,False
+"Berenjena, cruda",16.0,0.0,0.2,0.03,3.0,False,False
+"Berenjena, hervida",30.0,0.0,0.2,0.04,3.0,False,False
+"Berro, crudo",18.0,0.0,0.3,0.02,60.0,False,False
+"Brócoli, crudo",27.0,0.0,0.2,0.11,33.0,False,False
+"Brócoli, hervido",29.0,0.0,0.4,0.08,41.0,False,False
+"Brotes de soja, crudo",30.0,0.0,0.2,0.05,6.0,False,False
+"Brotes de soja, rehogado",54.0,0.0,0.2,0.04,9.0,False,False
+"Cebolla de verdeo, cruda",28.0,0.0,0.2,0.03,16.0,False,False
+"Cebolla de verdeo, rehogada",29.0,0.0,0.2,0.03,16.0,False,False
+"Cebolla, cruda",36.0,0.0,0.1,0.04,4.0,False,False
+"Cebolla, rehogada",36.0,0.0,0.1,0.04,4.0,False,False
+"Champignones, enlatados",21.0,0.0,0.3,0.04,425.0,False,False
+"Champignones, frescos, crudos",24.0,0.0,0.3,0.05,5.0,False,False
+"Chaucha, fresca, cruda",29.0,0.0,0.2,0.05,23.0,False,False
+"Chaucha, fresca, hervida",29.0,0.0,0.3,0.06,23.0,False,False
+"Chuchu o chayote, crudo",16.0,0.0,0.1,0.03,2.0,False,False
+"Coliflor, crudo",23.0,0.0,0.2,0.13,41.0,False,False
+"Coliflor, hervido",19.0,0.0,0.5,0.07,41.0,False,False
+"Escarola, cruda",12.0,0.0,0.2,0.05,10.0,False,False
+"Espárrago, crudo",18.0,0.0,0.2,0.05,7.0,False,False
+"Espárrago, hervido",20.0,0.0,0.2,0.05,7.0,False,False
+"Espinaca, cruda",21.0,0.0,0.39,0.06,79.0,False,False
+"Espinaca, hervida",20.0,0.0,0.26,0.109,70.0,False,False
+"Habas, cruda",95.0,0.0,0.8,0.2,12.0,False,False
+"Habas, hervida",95.0,0.0,0.8,0.2,12.0,False,False
+"Hakusai o col china, crudo",13.0,0.0,0.2,0.03,65.0,False,False
+"Hinojo, crudo",24.0,0.0,0.2,0.09,52.0,False,False
+"Hinojo, hervido",24.0,0.0,0.2,0.09,52.0,False,False
+"Hongos, enlatados",21.0,0.0,0.3,0.04,425.0,False,False
+"Hongos, frescos, crudos",24.0,0.0,0.3,0.05,5.0,False,False
+"Hongos, frescos, rehogados",25.0,0.0,0.33,0.04,12.0,False,False
+"Hongos, secos",303.0,0.0,1.0,0.23,13.0,False,False
+"Jardinera, enlatada",67.0,0.0,0.2,0.01,250.0,False,False
+"Jengibre",77.0,0.0,0.8,0.15,13.0,False,False
+"Kale, crudo",26.0,0.0,1.5,0.1,53.0,False,False
+"Lechuga, cruda",12.0,0.0,0.2,0.01,13.0,False,False
+"Mandioca, cruda",153.0,0.0,0.3,0.07,14.0,False,False
+"Mandioca, hervida",153.0,0.0,0.3,0.07,14.0,False,False
+"Palmitos, enlatados",25.0,0.0,0.6,0.13,426.0,False,False
+"Pepino, crudo",12.0,0.0,0.1,0.08,13.0,False,False
+"Perejil, crudo",47.0,0.0,1.0,0.13,56.0,False,False
+"Pickles, en vinagre",7.0,0.0,0.2,0.05,1208.0,False,False
+"Puerro, crudo",38.0,0.0,0.4,0.04,81.0,False,False
+"Puerro, hervido",32.0,0.0,0.2,0.027,10.0,False,False
+"Rabanito, crudo",23.0,0.0,0.1,0.03,39.0,False,False
+"Radicheta, cruda",14.0,0.0,0.3,0.07,97.0,False,False
+"Remolacha, cruda",44.0,0.0,0.2,0.03,51.0,False,False
+"Remolacha, hervida",40.0,0.0,0.18,0.03,77.0,False,False
+"Repollito de Bruselas, crudos",43.0,0.0,0.5,0.06,25.0,False,False
+"Repollito de Bruselas, hervidos",33.0,0.0,0.5,0.1,25.0,False,False
+"Repollo, crudo",19.0,0.0,0.1,0.03,18.0,False,False
+"Repollo, hervido",20.0,0.0,0.1,0.0,18.0,False,False
+"Rúcula, cruda",24.0,0.0,0.7,0.09,27.0,False,False
+"Tomate, crudo",17.0,0.0,0.2,0.03,5.0,False,False
+"Tomate, desecado",257.0,0.0,3.0,0.43,107.0,False,False
+"Tomate, enlatado",12.0,0.0,0.3,0.03,10.0,False,False
+"Tomate, hervido",18.0,0.0,0.11,0.044,11.0,False,False
+"Tomate, puré de tomate",37.0,0.0,0.2,0.09,67.0,False,False
+"Tomates cherry, crudos",23.0,0.0,0.5,0.03,4.0,False,False
+"Verdolaga, cruda",19.0,0.0,0.4,0.03,45.0,False,False
+"Zanahoria, cruda",43.0,0.0,0.2,0.01,22.0,False,False
+"Zanahoria, hervida",26.0,0.0,0.2,0.03,58.0,False,False
+"Zapallito, crudo",15.0,0.0,0.3,0.09,2.0,False,False
+"Zapallito, hervido",15.0,0.0,0.1,0.08,2.0,False,False
+"Zapallo, crudo",36.0,0.0,0.1,0.07,3.0,False,False
+"Zapallo, hervido",28.0,0.0,0.1,0.04,3.0,False,False
+"Zucchini, crudo",16.0,0.0,0.3,0.09,8.0,False,False
+"Zucchini, hervido",16.0,0.0,0.3,0.09,9.0,False,False
+"Aceituna negra",119.0,0.0,10.9,2.28,735.0,False,False
+"Aceituna verde",130.0,0.0,13.5,2.03,1556.0,False,False
+"Ananá",50.0,0.0,0.2,0.01,2.0,False,False
+"Ananá, enlatado (fruta y almíbar)",84.0,8.5,0.1,0.01,1.0,False,False
+"Arándanos",54.0,0.0,0.3,0.03,1.0,False,False
+"Banana",92.0,0.0,0.2,0.112,1.0,False,False
+"Cereza",65.0,0.0,0.5,0.04,3.0,False,False
+"Ciruela",51.0,0.0,0.2,0.02,2.0,False,False
+"Ciruela pasa / ciruela seca",236.0,0.0,0.1,0.09,21.0,False,False
+"Coco rallado",504.0,35.8,35.5,31.47,262.0,False,False
+"Damasco",41.0,0.0,0.1,0.03,1.0,False,False
+"Dátiles",282.0,0.0,0.3,0.03,2.0,False,False
+"Durazno",45.0,0.0,0.1,0.02,3.0,False,False
+"Durazno orejón",234.0,0.0,0.8,0.08,7.0,False,False
+"Durazno, enlatado (fruta y almíbar)",70.0,12.1,0.1,0.01,1.0,False,False
+"Frambuesa",32.0,0.0,0.7,0.02,1.0,False,False
+"Frutilla",31.0,0.0,0.6,0.02,2.0,False,False
+"Higo",74.0,0.0,0.4,0.06,2.0,False,False
+"Higo desecado",238.0,0.0,0.9,0.35,10.0,False,False
+"Kiwi",56.0,0.0,0.5,0.05,3.0,False,False
+"Limón",35.0,0.0,0.9,0.09,6.0,False,False
+"Mandarina",52.0,0.0,0.3,0.04,2.0,False,False
+"Mango",60.0,0.0,0.4,0.09,1.0,False,False
+"Manzana con piel",48.0,0.0,0.2,0.03,1.0,False,False
+"Manzana sin piel",59.0,0.0,0.3,0.04,5.0,False,False
+"Melón",37.0,0.0,0.1,0.06,18.0,False,False
+"Membrillo",56.0,0.0,0.1,0.05,3.0,False,False
+"Naranja",43.0,0.0,0.12,0.023,0.0,False,False
+"Palta",190.0,0.0,19.5,4.1,7.0,False,False
+"Pera",55.0,0.0,0.4,0.02,2.0,False,False
+"Pera orejón",262.0,0.0,0.4,0.08,6.0,False,False
+"Pera, enlatada (fruta y almíbar)",72.0,9.1,0.1,0.01,5.0,False,False
+"Pomelo",39.0,0.0,0.1,0.01,1.0,False,False
+"Sandía",32.0,0.0,0.2,0.02,8.0,False,False
+"Uva",73.0,0.0,0.2,0.05,2.0,False,False
+"Uva pasa",315.0,0.0,0.3,0.09,26.0,False,False
+"Almidón de maíz, crudo",363.0,0.0,0.1,0.01,9.0,False,False
+"Almidón de mandioca, crudo",363.0,0.0,0.1,0.01,9.0,False,False
+"Amaranto, crudo",366.0,0.0,7.8,1.9,4.0,False,False
+"Arroz blanco, crudo",339.0,0.0,0.2,0.05,4.0,False,False
+"Arroz blanco, hervido",126.0,0.0,0.2,0.06,0.0,False,False
+"Arroz integral, crudo",350.0,0.0,3.2,0.59,5.0,False,False
+"Arroz yamaní, crudo",345.0,0.0,2.7,0.54,4.0,False,False
+"Arveja, semilla seca cruda",311.0,0.0,2.9,0.41,16.0,False,False
+"Avena, arrollada, cruda",357.0,0.0,7.5,1.52,2.0,False,False
+"Batata, cruda",73.0,0.0,0.1,0.02,6.0,False,False
+"Batata, hervida",83.0,0.0,0.1,0.03,6.0,False,False
+"Choclo, crudo",97.0,0.0,1.2,0.18,40.0,False,False
+"Choclo, hervido",100.0,0.0,0.7,0.11,4.0,False,False
+"Fideos secos, crudos",352.0,0.0,0.0,1.5,0.28,6.0,False,False
+"Fideos secos integrales, crudos",346.0,0.0,1.6,0.25,14.0,False,False
+"Garbanzos, crudos",339.0,0.0,6.0,0.603,24.0,False,False
+"Garbanzos, hervidos",138.0,0.0,2.6,0.269,8.0,False,False
+"Gérmen de trigo",334.0,0.0,9.7,1.67,12.0,False,False
+"Harina de algarrobo",221.0,0.0,0.7,0.09,35.0,False,False
+"Harina de arroz, cruda",348.0,0.0,1.4,0.39,0.0,False,False
+"Harina de cebada, cruda",328.0,0.0,1.7,0.34,4.0,False,False
+"Harina de centeno, cruda",333.0,0.0,0.9,0.15,2.0,False,False
+"Harina de chía",374.0,0.0,30.7,3.33,16.0,False,False
+"Harina de garbanzos, cruda",338.0,0.0,6.7,0.69,64.0,False,False
+"Harina de maíz, cruda",307.0,0.0,1.39,0.171,25.0,False,False
+"Harina de quinoa, cruda",304.0,0.0,1.0,0.12,2.0,False,False
+"Harina de soja, cruda",338.0,0.0,8.9,1.29,9.0,False,False
+"Harina de trigo 000 fortificada",329.0,0.0,1.0,0.16,7.0,False,False
+"Harina de trigo 0000 fortificada",353.0,0.0,0.9,0.15,7.0,False,False
+"Harina de trigo integral, cruda",308.0,0.0,3.0,0.43,16.0,False,False
+"Harina leudante, cruda",329.0,0.0,1.0,0.16,714.0,False,False
+"Lentejas, crudas",301.0,0.0,0.8,0.15,12.0,False,False
+"Lentejas, hervidas",88.0,0.0,0.4,0.05,2.0,False,False
+"Levadura fresca",91.0,0.0,1.9,0.24,30.0,False,False
+"Levadura seca en polvo",288.0,0.0,7.6,1.0,51.0,False,False
+"Papa, cruda",79.0,0.0,0.1,0.03,24.0,False,False
+"Papa, hervida",81.0,0.0,0.1,0.03,5.0,False,False
+"Polenta / Harina de maíz hervida",108.0,0.0,0.4,0.06,6.0,False,False
+"Polvo de hornear",96.0,0.0,0.1,0.0,7893.0,False,False
+"Porotos, crudos",276.0,0.0,1.1,0.07,8.0,False,False
+"Porotos, hervidos",117.0,0.0,0.4,0.03,6.0,False,False
+"Quinoa, semilla, cruda",330.0,0.0,5.1,1.45,6.0,False,False
+"Salvado de avena",246.0,0.0,7.0,1.33,4.0,False,False
+"Salvado de trigo",216.0,0.0,5.5,0.89,27.0,False,False
+"Sémola de trigo, cruda",336.0,0.0,1.1,0.15,1.0,False,False
+"Soja texturizada",283.0,0.0,1.2,0.21,20.0,False,False
+"Soja, porotos crudos",413.0,0.0,19.9,2.88,7.0,False,False
+"Tofu",149.0,0.0,8.7,1.26,14.0,False,False
+"Trigo burgol, crudo",315.0,0.0,1.3,0.23,17.0,False,False
+"Leche condensada",328.0,43.0,8.7,5.49,127.0,False,False
+"Leche descremada fluida",43.0,0.0,0.4,0.1,53.0,False,False
+"Leche descremada en polvo fortificada",360.0,0.0,1.0,0.5,563.0,False,False
+"Leche entera fluida",58.0,0.0,2.9,1.87,57.0,False,False
+"Leche entera en polvo fortificada",480.0,0.0,24.8,15.54,404.0,False,False
+"Leche parcialmente descremada fluida",44.0,0.0,1.4,0.95,55.0,False,False
+"Yogur descremado natural",36.0,0.0,0.0,0.0,47.0,False,False
+"Yogur entero natural",62.0,0.0,3.3,2.1,46.0,False,False
+"Yogur entero saborizado con azúcar",87.0,6.3,3.3,2.1,46.0,False,False
+"Queso Azul / Roquefort",368.0,0.0,31.1,19.26,1210.0,False,False
+"Queso blanco descremado untable",82.0,0.0,0.3,0.0,106.0,False,False
+"Queso Cheddar",410.0,0.0,33.8,19.37,644.0,False,False
+"Queso Cremoso",310.0,0.0,24.9,13.66,704.0,False,False
+"Queso Cuartirolo",280.0,0.0,21.4,13.66,360.0,False,False
+"Queso de máquina / Barra",356.0,0.0,27.4,17.61,819.0,False,False
+"Queso Mar del Plata / Pategrás",332.0,0.0,25.6,21.27,720.0,False,False
+"Queso Mascarpone",357.0,0.0,34.4,20.21,314.0,False,False
+"Queso Muzzarella",278.0,0.0,19.3,13.9,486.0,False,False
+"Queso Parmesano",350.0,0.0,24.4,13.5,1804.0,False,False
+"Queso Port Salut",225.0,0.0,12.9,7.15,55.0,False,False
+"Queso Provolone",350.0,0.0,26.6,17.08,727.0,False,False
+"Queso Reggianito / Sardo",381.0,0.0,25.0,14.85,1175.0,False,False
+"Queso untable clásico",284.0,0.0,27.0,16.0,409.0,False,False
+"Queso untable light",195.0,0.0,16.0,9.3,364.0,False,False
+"Ricota entera",169.0,0.0,11.8,7.28,146.0,False,False
+"Ricota descremada",137.0,0.0,7.9,4.93,99.0,False,False
+"Bondiola (fiambre)",264.0,0.0,22.0,7.94,1250.0,False,False
+"Carne de cerdo magra cruda",206.0,0.0,14.8,4.92,57.0,False,False
+"Carne picada vacuna común",210.0,0.0,14.4,6.04,52.0,False,False
+"Carne picada vacuna magra / especial",138.0,0.0,5.5,2.15,60.0,False,False
+"Carne vacuna promedio cortes magros",138.0,0.0,5.5,2.15,60.0,False,False
+"Carne vacuna promedio cortes semigrasos",176.0,0.0,10.1,4.12,61.0,False,False
+"Carne vacuna promedio cortes grasos",210.0,0.0,14.4,6.04,52.0,False,False
+"Chorizo parrillero crudo",296.0,0.0,25.1,8.6,788.0,False,False
+"Conejo crudo",130.0,0.0,5.6,1.66,41.0,False,False
+"Cordero crudo",224.0,0.0,17.0,8.19,74.0,False,False
+"Hígado vacuno crudo",130.0,0.0,3.6,1.23,69.0,False,False
+"Jamón cocido",107.0,0.0,3.3,1.1,800.0,False,False
+"Jamón crudo",319.0,0.0,22.6,7.94,2130.0,False,False
+"Morcilla",374.0,0.0,34.5,13.4,680.0,False,False
+"Mortadela",306.0,0.0,25.4,9.51,1246.0,False,False
+"Paleta de cerdo cocida (fiambre)",107.0,0.0,3.3,1.1,800.0,False,False
+"Panceta ahumada",389.0,0.0,37.1,12.62,1140.0,False,False
+"Pollo entero con piel crudo",208.0,0.0,15.5,4.41,69.0,False,False
+"Pollo pechuga sin piel cruda",114.0,0.0,2.6,0.69,45.0,False,False
+"Salame",372.0,0.0,31.7,11.42,1358.0,False,False
+"Salchicha de Viena",226.0,0.0,17.2,6.08,1297.0,False,False
+"Salchicha de Viena light",140.0,0.0,9.5,3.81,744.0,False,False
+"Huevo de gallina, clara cruda",51.0,0.0,0.2,0.0,186.0,False,False
+"Huevo de gallina, entero crudo",156.0,0.0,11.8,3.18,135.0,False,False
+"Huevo de gallina, yema cruda",339.0,0.0,28.7,10.33,65.0,False,False
+"Atún enlatado al natural",86.0,0.0,1.0,0.21,247.0,False,False
+"Atún enlatado en aceite",190.0,0.0,8.2,1.53,416.0,False,False
+"Caballa enlatada",149.0,0.0,6.3,1.86,379.0,False,False
+"Calamar crudo",99.0,0.0,1.4,0.36,44.0,False,False
+"Camarón / Langostino crudo",91.0,0.0,0.8,0.1,119.0,False,False
+"Merluza filet crudo",80.0,0.0,1.3,0.3,91.0,False,False
+"Salmón rosado crudo",122.0,0.0,4.4,0.81,75.0,False,False
+"Sardina enlatada en aceite",202.0,0.0,11.5,1.53,307.0,False,False
+"Aceite comestible mezcla",900.0,0.0,100.0,10.83,0.0,False,False
+"Aceite de canola",892.0,0.0,99.1,7.37,0.0,False,False
+"Aceite de chía",900.0,0.0,100.0,9.86,0.0,False,False
+"Aceite de coco",900.0,0.0,100.0,82.48,0.0,False,False
+"Aceite de girasol",900.0,0.0,100.0,10.6,0.0,False,False
+"Aceite de girasol alto oleico",900.0,0.0,100.0,9.6,0.0,False,False
+"Aceite de maíz",900.0,0.0,100.0,15.2,2.0,False,False
+"Aceite de oliva",900.0,0.0,100.0,17.0,0.0,False,False
+"Aceite de soja",900.0,0.0,100.0,15.65,0.0,False,False
+"Almendra",570.0,0.0,49.9,3.8,1.0,False,False
+"Avellana",631.0,0.0,60.9,4.46,6.0,False,False
+"Maní tostado salado",596.0,0.0,49.7,7.72,701.0,False,False
+"Maní tostado sin sal",596.0,0.0,49.7,7.72,6.0,False,False
+"Mantequilla de maní",607.0,0.0,49.5,9.52,476.0,False,False
+"Nuez",690.0,0.0,67.4,6.13,3.0,False,False
+"Pistacho salado",566.0,0.0,45.8,5.65,428.0,False,False
+"Semilla de chía",374.0,0.0,30.7,3.33,16.0,False,False
+"Semilla de girasol",592.0,0.0,51.5,4.46,9.0,False,False
+"Semilla de lino",459.0,0.0,42.2,3.66,30.0,False,False
+"Semilla de sésamo",565.0,0.0,49.7,6.96,11.0,False,False
+"Semilla de zapallo",581.0,0.0,49.1,8.66,7.0,False,False
+"Azúcar blanca refinada",400.0,99.8,0.0,0.0,1.0,False,False
+"Azúcar impalpable",399.0,97.8,0.0,0.0,1.0,False,False
+"Azúcar rubia / mascabo",393.0,97.0,0.0,0.0,28.0,False,False
+"Dulce de batata",255.0,52.0,0.1,0.0,19.0,False,False
+"Dulce de leche común",315.0,44.0,6.6,4.07,138.0,False,False
+"Dulce de membrillo",269.0,52.0,0.1,0.0,0.0,False,False
+"Glucosa líquida / jarabe",339.0,40.2,0.0,0.0,0.0,False,False
+"Mermelada de frutas común",273.0,43.7,0.1,0.01,32.0,False,False
+"Miel de abejas",330.0,82.1,0.0,0.0,4.0,False,False
+"Cacao amargo puro en polvo",285.0,0.0,13.7,8.07,21.0,False,False
+"Chocolate amargo",575.0,0.0,52.3,32.28,24.0,False,False
+"Chocolate con leche",522.0,44.0,29.7,18.51,79.0,False,False
+"Chocolate blanco",548.0,59.0,32.1,19.41,90.0,False,False
+"Grasa de cerdo refinada",898.0,0.0,99.8,39.2,0.0,False,False
+"Grasa vacuna refinada",899.0,0.0,99.9,49.8,0.0,False,False
+"Manteca",758.0,0.0,84.0,50.93,223.0,False,False
+"Margarina vegetal",559.0,0.0,61.7,27.6,295.0,False,False
+"Ketchup",113.0,10.6,0.1,0.01,907.0,False,False
+"Mayonesa común",391.0,3.5,40.0,4.24,833.0,False,False
+"Mostaza clásica",52.0,0.0,3.3,0.21,1104.0,False,False
+"Salsa de soja común",62.0,1.3,0.5,0.04,6820.0,False,False
+"Vinagre blanco / manzana / vino",1.0,0.0,0.0,0.0,8.0,False,False
+"Sal fina común (NaCl)",0.0,0.0,0.0,0.0,40000.0,False,False
+"Sal marina fina",0.0,0.0,0.0,0.0,34400.0,False,False
+"Sal modificada (66% Cloruro de sodio)",0.0,0.0,0.0,0.0,26400.0,False,False
+"Sal modificada (33% Cloruro de sodio)",0.0,0.0,0.0,0.0,13200.0,False,False
+"Sal dietética sin sodio (100% KCl)",0.0,0.0,0.0,0.0,0.0,False,False
+"Agua potable de red",0.0,0.0,0.0,0.0,5.0,False,False
+"Edulcorante estevia líquido/polvo puro",0.0,0.0,0.0,0.0,10.0,True,False
+"Edulcorante sucralosa / sacarina",0.0,0.0,0.0,0.0,10.0,True,False
+"Café instantáneo en polvo",355.0,0.0,0.5,0.2,37.0,False,True
