@@ -44,6 +44,48 @@ def registrar_evento(usuario, accion, detalle=""):
     except Exception:
         pass
 
+@st.cache_data(ttl=300)
+def cargar_base_alimentos():
+    try:
+        df_ali = conn.read(worksheet="alimentos", ttl="60s")
+        if df_ali is not None and not df_ali.empty:
+            df_ali = df_ali.dropna(how="all")
+            df_ali.columns = [normalizar_col(c) for c in df_ali.columns]
+            
+            base = {}
+            for _, r in df_ali.iterrows():
+                nom = str(r.get("alimento", "")).strip()
+                if nom:
+                    base[nom] = {
+                        "kcal": float(r.get("kcal", 0.0)),
+                        "cho": float(r.get("cho", 0.0)),
+                        "azuc_tot": float(r.get("azuc_tot", 0.0)),
+                        "azuc_anad": float(r.get("azuc_anad", 0.0)),
+                        "prot": float(r.get("prot", 0.0)),
+                        "gtot": float(r.get("gtot", 0.0)),
+                        "gsat": float(r.get("gsat", 0.0)),
+                        "gtrans": float(r.get("gtrans", 0.0)),
+                        "fibra": float(r.get("fibra", 0.0)),
+                        "sodio": float(r.get("sodio", 0.0)),
+                        "edulc": str(r.get("edulc", "")).strip().upper() == "TRUE",
+                        "caf": str(r.get("caf", "")).strip().upper() == "TRUE"
+                    }
+            if base:
+                return base
+    except Exception:
+        pass
+    
+    # Respaldo básico si aún no se copió la hoja
+    return {
+        "Maíz, grano entero, crudo [SARA 2]": {"kcal": 365.0, "cho": 65.8, "azuc_tot": 1.6, "azuc_anad": 0.0, "prot": 9.4, "gtot": 4.7, "gsat": 0.67, "gtrans": 0.0, "fibra": 7.3, "sodio": 35.0, "edulc": False, "caf": False},
+        "Choclo amarillo, grano, crudo [SARA 2]": {"kcal": 97.0, "cho": 17.8, "azuc_tot": 4.5, "azuc_anad": 0.0, "prot": 3.7, "gtot": 1.2, "gsat": 0.18, "gtrans": 0.0, "fibra": 2.7, "sodio": 15.0, "edulc": False, "caf": False},
+        "Harina de maíz / Polenta tradicional [ARGENFOODS]": {"kcal": 361.0, "cho": 76.8, "azuc_tot": 0.6, "azuc_anad": 0.0, "prot": 6.9, "gtot": 1.4, "gsat": 0.2, "gtrans": 0.0, "fibra": 7.3, "sodio": 1.0, "edulc": False, "caf": False},
+        "Almidón de maíz (Maicena) [ARGENFOODS]": {"kcal": 381.0, "cho": 91.3, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.3, "gtot": 0.1, "gsat": 0.01, "gtrans": 0.0, "fibra": 0.9, "sodio": 9.0, "edulc": False, "caf": False}
+    }
+
+BASE_NUTRICIONAL = cargar_base_alimentos()
+lista_alimentos_completa = sorted(list(BASE_NUTRICIONAL.keys()))
+
 # --- GESTIÓN DE SESIÓN ---
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
@@ -138,67 +180,6 @@ def obtener_logo_base64():
                 return base64.b64encode(f.read()).decode()
     return ""
 
-# ==============================================================================
-# BASE DE DATOS UNIFICADA: SARA 2 + ARGENFOODS (UNLu)
-# ==============================================================================
-BASE_NUTRICIONAL = {
-    # --- MATERIA GRASA / ACEITES ---
-    "Aceite de girasol [SARA 2]": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 10.6, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
-    "Aceite de oliva virgen extra [SARA 2]": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 17.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
-    "Aceite de maíz [SARA 2]": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 15.2, "gtrans": 0.0, "fibra": 0.0, "sodio": 2.0, "edulc": False, "caf": False},
-    "Aceite de soja [ARGENFOODS]": {"kcal": 884.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 14.4, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
-    "Grasa vacuna refinada [SARA 2]": {"kcal": 899.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 99.9, "gsat": 49.8, "gtrans": 3.7, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
-    "Manteca de vaca [SARA 2]": {"kcal": 758.0, "cho": 0.1, "azuc_tot": 0.1, "azuc_anad": 0.0, "prot": 0.5, "gtot": 84.0, "gsat": 50.93, "gtrans": 3.28, "fibra": 0.0, "sodio": 223.0, "edulc": False, "caf": False},
-    "Margarina vegetal [SARA 2]": {"kcal": 559.0, "cho": 0.7, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.2, "gtot": 61.7, "gsat": 27.6, "gtrans": 0.88, "fibra": 0.0, "sodio": 295.0, "edulc": False, "caf": False},
-
-    # --- FARINÁCEOS, SÉMOLAS Y LEGUMBRES ---
-    "Sémola de trigo / Semolín candeal [SARA 2]": {"kcal": 336.0, "cho": 72.8, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 12.7, "gtot": 1.1, "gsat": 0.15, "gtrans": 0.0, "fibra": 3.9, "sodio": 1.0, "edulc": False, "caf": False},
-    "Gluten puro de trigo en polvo [SARA 2]": {"kcal": 370.0, "cho": 13.8, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 75.0, "gtot": 1.9, "gsat": 0.3, "gtrans": 0.0, "fibra": 1.5, "sodio": 70.0, "edulc": False, "caf": False},
-    "Harina de trigo 000 fortificada [SARA 2]": {"kcal": 329.0, "cho": 69.8, "azuc_tot": 0.3, "azuc_anad": 0.0, "prot": 10.3, "gtot": 1.0, "gsat": 0.16, "gtrans": 0.0, "fibra": 4.0, "sodio": 7.0, "edulc": False, "caf": False},
-    "Harina de trigo 0000 fortificada [SARA 2]": {"kcal": 353.0, "cho": 74.0, "azuc_tot": 0.2, "azuc_anad": 0.0, "prot": 11.6, "gtot": 0.9, "gsat": 0.15, "gtrans": 0.0, "fibra": 2.5, "sodio": 7.0, "edulc": False, "caf": False},
-    "Harina de trigo integral [SARA 2]": {"kcal": 308.0, "cho": 58.8, "azuc_tot": 1.0, "azuc_anad": 0.0, "prot": 11.4, "gtot": 3.0, "gsat": 0.43, "gtrans": 0.0, "fibra": 12.6, "sodio": 16.0, "edulc": False, "caf": False},
-    "Harina de maíz / Polenta [ARGENFOODS]": {"kcal": 361.0, "cho": 76.8, "azuc_tot": 0.6, "azuc_anad": 0.0, "prot": 6.9, "gtot": 1.4, "gsat": 0.2, "gtrans": 0.0, "fibra": 7.3, "sodio": 1.0, "edulc": False, "caf": False},
-    "Almidón de maíz (Maicena) [ARGENFOODS]": {"kcal": 381.0, "cho": 91.3, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.3, "gtot": 0.1, "gsat": 0.01, "gtrans": 0.0, "fibra": 0.9, "sodio": 9.0, "edulc": False, "caf": False},
-    "Fécula de mandioca [ARGENFOODS]": {"kcal": 360.0, "cho": 88.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.6, "gtot": 0.2, "gsat": 0.04, "gtrans": 0.0, "fibra": 0.4, "sodio": 14.0, "edulc": False, "caf": False},
-    "Arroz blanco pulido [ARGENFOODS]": {"kcal": 360.0, "cho": 79.3, "azuc_tot": 0.1, "azuc_anad": 0.0, "prot": 6.6, "gtot": 0.6, "gsat": 0.18, "gtrans": 0.0, "fibra": 1.3, "sodio": 5.0, "edulc": False, "caf": False},
-    "Lentejas secas [ARGENFOODS]": {"kcal": 338.0, "cho": 60.0, "azuc_tot": 2.0, "azuc_anad": 0.0, "prot": 25.0, "gtot": 1.0, "gsat": 0.15, "gtrans": 0.0, "fibra": 11.0, "sodio": 6.0, "edulc": False, "caf": False},
-    "Porotos secos [ARGENFOODS]": {"kcal": 333.0, "cho": 60.3, "azuc_tot": 2.2, "azuc_anad": 0.0, "prot": 23.6, "gtot": 0.8, "gsat": 0.12, "gtrans": 0.0, "fibra": 15.0, "sodio": 12.0, "edulc": False, "caf": False},
-
-    # --- VEGETALES Y HORTALIZAS ---
-    "Acelga, cruda [SARA 2]": {"kcal": 18.0, "cho": 2.1, "azuc_tot": 1.1, "azuc_anad": 0.0, "prot": 1.8, "gtot": 0.2, "gsat": 0.03, "gtrans": 0.0, "fibra": 1.6, "sodio": 213.0, "edulc": False, "caf": False},
-    "Acelga, hervida [SARA 2]": {"kcal": 16.0, "cho": 2.0, "azuc_tot": 1.1, "azuc_anad": 0.0, "prot": 1.9, "gtot": 0.1, "gsat": 0.01, "gtrans": 0.0, "fibra": 2.1, "sodio": 179.0, "edulc": False, "caf": False},
-    "Espinaca, cruda [SARA 2]": {"kcal": 21.0, "cho": 1.43, "azuc_tot": 0.42, "azuc_anad": 0.0, "prot": 2.86, "gtot": 0.39, "gsat": 0.06, "gtrans": 0.0, "fibra": 2.2, "sodio": 79.0, "edulc": False, "caf": False},
-    "Ajo, crudo [SARA 2]": {"kcal": 91.0, "cho": 17.9, "azuc_tot": 2.1, "azuc_anad": 0.0, "prot": 4.4, "gtot": 0.2, "gsat": 0.09, "gtrans": 0.0, "fibra": 2.1, "sodio": 17.0, "edulc": False, "caf": False},
-    "Cebolla, cruda [SARA 2]": {"kcal": 36.0, "cho": 7.6, "azuc_tot": 1.7, "azuc_anad": 0.0, "prot": 1.1, "gtot": 0.1, "gsat": 0.04, "gtrans": 0.0, "fibra": 1.7, "sodio": 4.0, "edulc": False, "caf": False},
-    "Tomate perita maduro [ARGENFOODS]": {"kcal": 18.0, "cho": 3.9, "azuc_tot": 2.6, "azuc_anad": 0.0, "prot": 0.9, "gtot": 0.2, "gsat": 0.03, "gtrans": 0.0, "fibra": 1.2, "sodio": 5.0, "edulc": False, "caf": False},
-    "Papa blanca, cruda [ARGENFOODS]": {"kcal": 77.0, "cho": 17.5, "azuc_tot": 0.8, "azuc_anad": 0.0, "prot": 2.0, "gtot": 0.1, "gsat": 0.03, "gtrans": 0.0, "fibra": 2.2, "sodio": 6.0, "edulc": False, "caf": False},
-    "Zanahoria fresca [ARGENFOODS]": {"kcal": 41.0, "cho": 9.6, "azuc_tot": 4.7, "azuc_anad": 0.0, "prot": 0.9, "gtot": 0.2, "gsat": 0.04, "gtrans": 0.0, "fibra": 2.8, "sodio": 69.0, "edulc": False, "caf": False},
-    "Calabaza / Zapallo anco [ARGENFOODS]": {"kcal": 26.0, "cho": 6.5, "azuc_tot": 2.2, "azuc_anad": 0.0, "prot": 1.0, "gtot": 0.1, "gsat": 0.02, "gtrans": 0.0, "fibra": 0.5, "sodio": 1.0, "edulc": False, "caf": False},
-
-    # --- CACAO, DULCES Y CHOCOLATES ---
-    "Cacao en polvo amargo [ARGENFOODS]": {"kcal": 355.0, "cho": 49.0, "azuc_tot": 1.0, "azuc_anad": 0.0, "prot": 19.6, "gtot": 11.0, "gsat": 6.5, "gtrans": 0.0, "fibra": 28.0, "sodio": 21.0, "edulc": False, "caf": True},
-    "Chocolate semi-amargo / cobertura [ARGENFOODS]": {"kcal": 530.0, "cho": 55.0, "azuc_tot": 48.0, "azuc_anad": 48.0, "prot": 5.5, "gtot": 32.0, "gsat": 19.0, "gtrans": 0.0, "fibra": 6.0, "sodio": 15.0, "edulc": False, "caf": True},
-    "Chocolate con leche [ARGENFOODS]": {"kcal": 540.0, "cho": 59.0, "azuc_tot": 52.0, "azuc_anad": 50.0, "prot": 7.5, "gtot": 30.0, "gsat": 18.0, "gtrans": 0.3, "fibra": 3.0, "sodio": 85.0, "edulc": False, "caf": True},
-
-    # --- LÁCTEOS, HUEVOS Y CARNES ---
-    "Huevo entero [SARA 2]": {"kcal": 156.0, "cho": 0.4, "azuc_tot": 0.4, "azuc_anad": 0.0, "prot": 12.0, "gtot": 11.8, "gsat": 3.18, "gtrans": 0.0, "fibra": 0.0, "sodio": 135.0, "edulc": False, "caf": False},
-    "Leche entera pasteurizada [ARGENFOODS]": {"kcal": 61.0, "cho": 4.7, "azuc_tot": 4.7, "azuc_anad": 0.0, "prot": 3.2, "gtot": 3.3, "gsat": 2.1, "gtrans": 0.1, "fibra": 0.0, "sodio": 50.0, "edulc": False, "caf": False},
-    "Leche entera en polvo [ARGENFOODS]": {"kcal": 496.0, "cho": 38.0, "azuc_tot": 38.0, "azuc_anad": 0.0, "prot": 26.0, "gtot": 26.0, "gsat": 16.5, "gtrans": 1.0, "fibra": 0.0, "sodio": 370.0, "edulc": False, "caf": False},
-    "Queso cuartirolo / cremoso [ARGENFOODS]": {"kcal": 298.0, "cho": 1.5, "azuc_tot": 1.0, "azuc_anad": 0.0, "prot": 19.5, "gtot": 23.5, "gsat": 14.8, "gtrans": 0.7, "fibra": 0.0, "sodio": 510.0, "edulc": False, "caf": False},
-    "Queso duro rallar (Sardo / Reggianito) [ARGENFOODS]": {"kcal": 392.0, "cho": 2.0, "azuc_tot": 0.5, "azuc_anad": 0.0, "prot": 33.0, "gtot": 28.0, "gsat": 17.5, "gtrans": 0.8, "fibra": 0.0, "sodio": 950.0, "edulc": False, "caf": False},
-    "Carne vacuna magra (Cuadril) [ARGENFOODS]": {"kcal": 140.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 22.0, "gtot": 5.8, "gsat": 2.3, "gtrans": 0.2, "fibra": 0.0, "sodio": 65.0, "edulc": False, "caf": False},
-    "Pollo pechuga fresca [ARGENFOODS]": {"kcal": 120.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 22.5, "gtot": 3.0, "gsat": 0.9, "gtrans": 0.0, "fibra": 0.0, "sodio": 70.0, "edulc": False, "caf": False},
-
-    # --- CONDIMENTOS Y AZÚCARES ---
-    "Azúcar blanco común [SARA 2]": {"kcal": 400.0, "cho": 100.0, "azuc_tot": 99.8, "azuc_anad": 99.8, "prot": 0.0, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 1.0, "edulc": False, "caf": False},
-    "Miel de abejas pura [ARGENFOODS]": {"kcal": 304.0, "cho": 82.4, "azuc_tot": 82.0, "azuc_anad": 82.0, "prot": 0.3, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.2, "sodio": 4.0, "edulc": False, "caf": False},
-    "Sal de mesa común (NaCl) [SARA 2]": {"kcal": 0.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 40000.0, "edulc": False, "caf": False},
-    "Agua potable [SARA 2]": {"kcal": 0.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 5.0, "edulc": False, "caf": False}
-}
-
-lista_alimentos_completa = sorted(list(BASE_NUTRICIONAL.keys()))
-
-# Inicialización completamente vacía
 if "receta" not in st.session_state:
     st.session_state.receta = []
 
@@ -217,11 +198,11 @@ with tab1:
         porcion = st.number_input("Porción reglamentaria CAA (g)", min_value=1.0, value=80.0)
 
     st.markdown("---")
-    st.subheader("1. Buscador Integrado (SARA 2 y ARGENFOODS)")
+    st.subheader(f"1. Buscador Integrado ({len(lista_alimentos_completa)} alimentos SARA 2 y ARGENFOODS)")
     
     c_f1, c_f2 = st.columns([2, 3])
     with c_f1:
-        filtro_txt = st.text_input("Buscar insumo en ambas bases:", placeholder="Ej: semola, chocolate, soja, arroz, queso...")
+        filtro_txt = st.text_input("Buscar insumo en ambas bases:", placeholder="Ej: maiz, choclo, chocolate, harina, queso...")
 
     if filtro_txt.strip():
         opciones = [a for a in lista_alimentos_completa if normalizar_texto(filtro_txt) in normalizar_texto(a)]
@@ -229,7 +210,7 @@ with tab1:
         opciones = lista_alimentos_completa
 
     with c_f2:
-        ing_elegido = st.selectbox(f"Coincidencias oficiales ({len(opciones)} disponibles):", opciones) if opciones else None
+        ing_elegido = st.selectbox(f"Coincidencias oficiales ({len(opciones)} encontradas):", opciones) if opciones else None
 
     if ing_elegido:
         c_g1, c_g2 = st.columns([3, 1])
