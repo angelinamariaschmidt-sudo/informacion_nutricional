@@ -259,24 +259,6 @@ with tab1:
             st.markdown("**Argentina e Iberoamérica**")
             st.link_button("🇦🇷 ARGENFOODS (UNLu)", "https://www.argenfood.unlu.edu.ar/Tablas/Tabla.htm")
             st.caption("Base de datos de alimentos del Instituto de Investigaciones Agropecuarias y UNLu.")
-            
-            st.write("")
-            st.markdown("**Organización de las Naciones Unidas**")
-            st.link_button("🌐 FAO / INFOODS", "https://www.fao.org/infoods/infoods/tables-and-databases/es/")
-            st.caption("Tablas internacionales estandarizadas de composición de alimentos.")
-
-        with col_of2:
-            st.markdown("**Estados Unidos (USDA)**")
-            st.link_button("🇺🇸 USDA FoodData Central", f"https://fdc.nal.usda.gov/fdc-app.html#/?query={termino_consulta}")
-            st.caption("Base científica del Departamento de Agricultura de EE.UU.")
-
-            st.write("")
-            st.markdown("**Europa (Francia y Reino Unido)**")
-            c_sub1, c_sub2 = st.columns(2)
-            with c_sub1:
-                st.link_button("🇫🇷 CIQUAL (ANSES)", "https://ciqual.anses.fr/")
-            with c_sub2:
-                st.link_button("🇬🇧 CoFID (Reino Unido)", "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid")
 
     # CARGA MANUAL PARA DATOS EXTERNOS
     with st.expander("➕ Cargar alimento manual o desde otra base (valores cada 100 g)"):
