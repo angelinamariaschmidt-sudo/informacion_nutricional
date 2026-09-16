@@ -7,7 +7,7 @@ import unicodedata
 st.set_page_config(page_title="Plataforma Bromatológica - Rotulado y Sellos", layout="wide")
 
 # --- CONTROL DE ACCESO ---
-CLAVES_VALIDAS = ["bromatologia2026", "catamarca2026", "admin123"]
+CLAVES_VALIDAS = ["bromatologia2026", "ecomeg2026", "infonutri2026"]
 
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
