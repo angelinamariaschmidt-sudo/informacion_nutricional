@@ -128,7 +128,7 @@ else:
 def normalizar_texto(t):
     if not t:
         return ""
-    return ''.join(c for c in unicodedata.normalize('NFD', str(t).lower()) if unicodedata.category(ch) != 'Mn')
+    return ''.join(c for c in unicodedata.normalize('NFD', str(t).lower()) if unicodedata.category(c) != 'Mn')
 
 def obtener_logo_base64():
     archivos = ["Logo ECOMEG Transparente.png", "Logo ECOMEG Transparente.PNG", "logo_ecomeg.png", "ecomeg (R).png"]
@@ -175,6 +175,11 @@ BASE_NUTRICIONAL = {
     "Zanahoria fresca [ARGENFOODS]": {"kcal": 41.0, "cho": 9.6, "azuc_tot": 4.7, "azuc_anad": 0.0, "prot": 0.9, "gtot": 0.2, "gsat": 0.04, "gtrans": 0.0, "fibra": 2.8, "sodio": 69.0, "edulc": False, "caf": False},
     "Calabaza / Zapallo anco [ARGENFOODS]": {"kcal": 26.0, "cho": 6.5, "azuc_tot": 2.2, "azuc_anad": 0.0, "prot": 1.0, "gtot": 0.1, "gsat": 0.02, "gtrans": 0.0, "fibra": 0.5, "sodio": 1.0, "edulc": False, "caf": False},
 
+    # --- CACAO, DULCES Y CHOCOLATES ---
+    "Cacao en polvo amargo [ARGENFOODS]": {"kcal": 355.0, "cho": 49.0, "azuc_tot": 1.0, "azuc_anad": 0.0, "prot": 19.6, "gtot": 11.0, "gsat": 6.5, "gtrans": 0.0, "fibra": 28.0, "sodio": 21.0, "edulc": False, "caf": True},
+    "Chocolate semi-amargo / cobertura [ARGENFOODS]": {"kcal": 530.0, "cho": 55.0, "azuc_tot": 48.0, "azuc_anad": 48.0, "prot": 5.5, "gtot": 32.0, "gsat": 19.0, "gtrans": 0.0, "fibra": 6.0, "sodio": 15.0, "edulc": False, "caf": True},
+    "Chocolate con leche [ARGENFOODS]": {"kcal": 540.0, "cho": 59.0, "azuc_tot": 52.0, "azuc_anad": 50.0, "prot": 7.5, "gtot": 30.0, "gsat": 18.0, "gtrans": 0.3, "fibra": 3.0, "sodio": 85.0, "edulc": False, "caf": True},
+
     # --- LÁCTEOS, HUEVOS Y CARNES ---
     "Huevo entero [SARA 2]": {"kcal": 156.0, "cho": 0.4, "azuc_tot": 0.4, "azuc_anad": 0.0, "prot": 12.0, "gtot": 11.8, "gsat": 3.18, "gtrans": 0.0, "fibra": 0.0, "sodio": 135.0, "edulc": False, "caf": False},
     "Leche entera pasteurizada [ARGENFOODS]": {"kcal": 61.0, "cho": 4.7, "azuc_tot": 4.7, "azuc_anad": 0.0, "prot": 3.2, "gtot": 3.3, "gsat": 2.1, "gtrans": 0.1, "fibra": 0.0, "sodio": 50.0, "edulc": False, "caf": False},
@@ -217,7 +222,7 @@ with tab1:
     
     c_f1, c_f2 = st.columns([2, 3])
     with c_f1:
-        filtro_txt = st.text_input("Buscar insumo en ambas bases:", placeholder="Ej: semola, soja, arroz, queso, carne...")
+        filtro_txt = st.text_input("Buscar insumo en ambas bases:", placeholder="Ej: semola, chocolate, soja, arroz, queso...")
 
     if filtro_txt.strip():
         opciones = [a for a in lista_alimentos_completa if normalizar_texto(filtro_txt) in normalizar_texto(a)]
@@ -304,7 +309,7 @@ with tab1:
             sellos.append("EXCESO EN GRASAS SATURADAS")
         if c_sod > 0 and ((c_kcal > 0 and (c_sod / c_kcal) >= 1.0) or (c_sod >= 300.0)):
             sellos.append("EXCESO EN SODIO")
-        if sellos and c_kcal >= 275.0:
+        if any(s in ["EXCESO EN AZÚCARES", "EXCESO EN GRASAS TOTALES", "EXCESO EN GRASAS SATURADAS"] for s in sellos) and c_kcal >= 275.0:
             sellos.append("EXCESO EN CALORÍAS")
 
         st.markdown("---")
@@ -430,7 +435,7 @@ with tab2:
             with st.spinner("Consultando marco regulatorio argentino..."):
                 try:
                     headers = {"Content-Type": "application/json", "x-goog-api-key": api_key}
-                    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+                    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent"
                     body = {
                         "contents": [{"parts": [{"text": pregunta}]}],
                         "systemInstruction": {
