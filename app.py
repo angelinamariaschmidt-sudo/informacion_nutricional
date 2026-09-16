@@ -516,20 +516,12 @@ with tab2:
         else:
             with st.spinner("Consultando marco regulatorio argentino..."):
                 try:
-                    headers = {"Content-Type": "application/json", "x-goog-api-key": api_key}
+                    headers = {
+                        "Content-Type": "application/json",
+                        "x-goog-api-key": api_key
+                    }
                     
-                    # Detección automática del modelo disponible
-                    list_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
-                    list_res = requests.get(list_url, timeout=10)
-                    modelo_a_usar = "models/gemini-2.5-flash"
-                    if list_res.status_code == 200:
-                        modelos = list_res.json().get("models", [])
-                        for m in modelos:
-                            if "generateContent" in m.get("supportedGenerationMethods", []) and "flash" in m.get("name", ""):
-                                modelo_a_usar = m.get("name")
-                                break
-
-                    url = f"https://generativelanguage.googleapis.com/v1beta/{modelo_a_usar}:generateContent"
+                    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
                     body = {
                         "contents": [{"parts": [{"text": pregunta}]}],
                         "systemInstruction": {
@@ -552,7 +544,7 @@ with tab2:
         st.session_state.mensajes.append({"role": "assistant", "content": respuesta_texto})
         with st.chat_message("assistant"):
             st.markdown(respuesta_texto)
-
+            
 # ==========================================
 # PESTAÑA 3: AUDITORÍA Y CLIENTES (ADMIN)
 # ==========================================
