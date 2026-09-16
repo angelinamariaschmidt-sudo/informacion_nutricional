@@ -35,12 +35,35 @@ if st.sidebar.button("Cerrar sesión"):
 tab1, tab2 = st.tabs(["📊 Calculadora Nutricional & Sellos", "💬 Asistente Técnico Normativo"])
 
 def normalizar(texto):
+    if not texto:
+        return ""
     return ''.join(c for c in unicodedata.normalize('NFD', str(texto).lower()) if unicodedata.category(c) != 'Mn')
 
-# ==========================================================
-# BASE DE COMPOSICIÓN SARA 2 COMPLETA (Macronutrientes CAA)
-# ==========================================================
+# ==============================================================================
+# BASE DE DATOS MATRIZ: SARA 2 (Ministerio de Salud de la Nación / ENNyS 2)
+# ==============================================================================
 SARA2_DICT = {
+    # --- ACEITES Y MATERIAS GRASAS ---
+    "Aceite de girasol": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 10.6, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Aceite de girasol alto oleico": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 9.6, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Aceite de maíz": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 15.2, "gtrans": 0.0, "fibra": 0.0, "sodio": 2.0, "edulc": False, "caf": False},
+    "Aceite de oliva virgen extra": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 17.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Aceite de soja": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 15.65, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Aceite de canola": {"kcal": 892.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 99.1, "gsat": 7.37, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Aceite de coco": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 82.48, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Aceite de chía": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 9.86, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Aceite comestible mezcla": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 10.83, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Aceite de uva": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 11.25, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Aceite de sésamo": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 14.2, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Rocío vegetal en aerosol": {"kcal": 900.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 100.0, "gsat": 10.6, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Grasa vacuna refinada / primer jugo": {"kcal": 899.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 99.9, "gsat": 49.8, "gtrans": 3.7, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Grasa de cerdo / manteca de cerdo": {"kcal": 898.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 99.8, "gsat": 39.2, "gtrans": 0.0, "fibra": 0.0, "sodio": 0.0, "edulc": False, "caf": False},
+    "Grasa de pollo": {"kcal": 626.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 3.7, "gtot": 68.0, "gsat": 20.25, "gtrans": 0.75, "fibra": 0.0, "sodio": 32.0, "edulc": False, "caf": False},
+    "Manteca de vaca": {"kcal": 758.0, "cho": 0.1, "azuc_tot": 0.1, "azuc_anad": 0.0, "prot": 0.5, "gtot": 84.0, "gsat": 50.93, "gtrans": 3.28, "fibra": 0.0, "sodio": 223.0, "edulc": False, "caf": False},
+    "Manteca light": {"kcal": 509.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 3.3, "gtot": 55.1, "gsat": 34.32, "gtrans": 1.01, "fibra": 0.0, "sodio": 218.0, "edulc": False, "caf": False},
+    "Margarina vegetal en pan / pote": {"kcal": 559.0, "cho": 0.7, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.2, "gtot": 61.7, "gsat": 27.6, "gtrans": 0.88, "fibra": 0.0, "sodio": 295.0, "edulc": False, "caf": False},
+    "Margarina untable light": {"kcal": 472.0, "cho": 0.9, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.2, "gtot": 52.0, "gsat": 23.2, "gtrans": 0.57, "fibra": 0.0, "sodio": 610.0, "edulc": False, "caf": False},
+
     # --- VERDURAS Y HORTALIZAS (SARA 2) ---
     "Acelga, cruda": {"kcal": 18.0, "cho": 2.1, "azuc_tot": 1.1, "azuc_anad": 0.0, "prot": 1.8, "gtot": 0.2, "gsat": 0.03, "gtrans": 0.0, "fibra": 1.6, "sodio": 213.0, "edulc": False, "caf": False},
     "Acelga, hervida": {"kcal": 16.0, "cho": 2.0, "azuc_tot": 1.1, "azuc_anad": 0.0, "prot": 1.9, "gtot": 0.1, "gsat": 0.01, "gtrans": 0.0, "fibra": 2.1, "sodio": 179.0, "edulc": False, "caf": False},
@@ -69,83 +92,91 @@ SARA2_DICT = {
     "Brócoli, crudo": {"kcal": 27.0, "cho": 2.9, "azuc_tot": 1.7, "azuc_anad": 0.0, "prot": 3.3, "gtot": 0.2, "gsat": 0.11, "gtrans": 0.0, "fibra": 2.6, "sodio": 33.0, "edulc": False, "caf": False},
     "Brócoli, hervido": {"kcal": 29.0, "cho": 3.9, "azuc_tot": 3.3, "azuc_anad": 0.0, "prot": 2.4, "gtot": 0.4, "gsat": 0.08, "gtrans": 0.0, "fibra": 1.4, "sodio": 41.0, "edulc": False, "caf": False},
     "Brotes de soja, crudo": {"kcal": 30.0, "cho": 4.1, "azuc_tot": 4.1, "azuc_anad": 0.0, "prot": 3.0, "gtot": 0.2, "gsat": 0.05, "gtrans": 0.0, "fibra": 1.8, "sodio": 6.0, "edulc": False, "caf": False},
-    "Brotes de soja, rehogado": {"kcal": 54.0, "cho": 8.7, "azuc_tot": 1.9, "azuc_anad": 0.0, "prot": 4.3, "gtot": 0.2, "gsat": 0.04, "gtrans": 0.0, "fibra": 4.1, "sodio": 9.0, "edulc": False, "caf": False},
     "Cebolla de verdeo, cruda": {"kcal": 28.0, "cho": 4.7, "azuc_tot": 2.3, "azuc_anad": 0.0, "prot": 1.8, "gtot": 0.2, "gsat": 0.03, "gtrans": 0.0, "fibra": 2.6, "sodio": 16.0, "edulc": False, "caf": False},
-    "Cebolla de verdeo, rehogada": {"kcal": 29.0, "cho": 4.9, "azuc_tot": 2.4, "azuc_anad": 0.0, "prot": 1.9, "gtot": 0.2, "gsat": 0.03, "gtrans": 0.0, "fibra": 2.6, "sodio": 16.0, "edulc": False, "caf": False},
     "Cebolla, cruda": {"kcal": 36.0, "cho": 7.6, "azuc_tot": 1.7, "azuc_anad": 0.0, "prot": 1.1, "gtot": 0.1, "gsat": 0.04, "gtrans": 0.0, "fibra": 4.2, "sodio": 4.0, "edulc": False, "caf": False},
-    "Cebolla, rehogada": {"kcal": 36.0, "cho": 7.6, "azuc_tot": 1.7, "azuc_anad": 0.0, "prot": 1.1, "gtot": 0.1, "gsat": 0.04, "gtrans": 0.0, "fibra": 4.2, "sodio": 4.0, "edulc": False, "caf": False},
     "Champignones, enlatados": {"kcal": 21.0, "cho": 2.7, "azuc_tot": 2.3, "azuc_anad": 0.0, "prot": 1.9, "gtot": 0.3, "gsat": 0.04, "gtrans": 0.0, "fibra": 2.4, "sodio": 425.0, "edulc": False, "caf": False},
     "Champignones, frescos, crudos": {"kcal": 24.0, "cho": 2.3, "azuc_tot": 1.0, "azuc_anad": 0.0, "prot": 3.1, "gtot": 0.3, "gsat": 0.05, "gtrans": 0.0, "fibra": 1.0, "sodio": 5.0, "edulc": False, "caf": False},
     "Chaucha, fresca, cruda": {"kcal": 29.0, "cho": 4.3, "azuc_tot": 3.3, "azuc_anad": 0.0, "prot": 2.4, "gtot": 0.2, "gsat": 0.05, "gtrans": 0.0, "fibra": 2.7, "sodio": 23.0, "edulc": False, "caf": False},
     "Chaucha, fresca, hervida": {"kcal": 29.0, "cho": 4.7, "azuc_tot": 3.6, "azuc_anad": 0.0, "prot": 1.9, "gtot": 0.3, "gsat": 0.06, "gtrans": 0.0, "fibra": 3.2, "sodio": 23.0, "edulc": False, "caf": False},
-    "Chuchu o chayote, crudo": {"kcal": 16.0, "cho": 2.8, "azuc_tot": 1.7, "azuc_anad": 0.0, "prot": 0.8, "gtot": 0.1, "gsat": 0.03, "gtrans": 0.0, "fibra": 1.7, "sodio": 2.0, "edulc": False, "caf": False},
     "Coliflor, crudo": {"kcal": 23.0, "cho": 2.9, "azuc_tot": 1.9, "azuc_anad": 0.0, "prot": 2.4, "gtot": 0.2, "gsat": 0.13, "gtrans": 0.0, "fibra": 2.0, "sodio": 41.0, "edulc": False, "caf": False},
-    "Coliflor, hervido": {"kcal": 19.0, "cho": 1.8, "azuc_tot": 2.1, "azuc_anad": 0.0, "prot": 1.8, "gtot": 0.5, "gsat": 0.07, "gtrans": 0.0, "fibra": 2.3, "sodio": 41.0, "edulc": False, "caf": False},
-    "Escarola, cruda": {"kcal": 12.0, "cho": 0.9, "azuc_tot": 0.3, "azuc_anad": 0.0, "prot": 1.6, "gtot": 0.2, "gsat": 0.05, "gtrans": 0.0, "fibra": 3.1, "sodio": 10.0, "edulc": False, "caf": False},
-    "Espárrago, crudo": {"kcal": 18.0, "cho": 1.8, "azuc_tot": 1.9, "azuc_anad": 0.0, "prot": 2.2, "gtot": 0.2, "gsat": 0.05, "gtrans": 0.0, "fibra": 2.1, "sodio": 7.0, "edulc": False, "caf": False},
-    "Espárrago, hervido": {"kcal": 20.0, "cho": 2.1, "azuc_tot": 1.3, "azuc_anad": 0.0, "prot": 2.4, "gtot": 0.2, "gsat": 0.05, "gtrans": 0.0, "fibra": 2.0, "sodio": 7.0, "edulc": False, "caf": False},
     "Espinaca, cruda": {"kcal": 21.0, "cho": 1.43, "azuc_tot": 0.42, "azuc_anad": 0.0, "prot": 2.86, "gtot": 0.39, "gsat": 0.06, "gtrans": 0.0, "fibra": 2.2, "sodio": 79.0, "edulc": False, "caf": False},
     "Espinaca, hervida": {"kcal": 20.0, "cho": 1.35, "azuc_tot": 0.43, "azuc_anad": 0.0, "prot": 2.97, "gtot": 0.26, "gsat": 0.109, "gtrans": 0.0, "fibra": 2.4, "sodio": 70.0, "edulc": False, "caf": False},
-    "Habas, cruda": {"kcal": 95.0, "cho": 15.3, "azuc_tot": 1.5, "azuc_anad": 0.0, "prot": 6.7, "gtot": 0.8, "gsat": 0.2, "gtrans": 0.0, "fibra": 4.9, "sodio": 12.0, "edulc": False, "caf": False},
-    "Habas, hervida": {"kcal": 95.0, "cho": 15.3, "azuc_tot": 1.5, "azuc_anad": 0.0, "prot": 6.7, "gtot": 0.8, "gsat": 0.2, "gtrans": 0.0, "fibra": 4.9, "sodio": 12.0, "edulc": False, "caf": False},
-    "Hakusai o col china, crudo": {"kcal": 13.0, "cho": 1.2, "azuc_tot": 1.2, "azuc_anad": 0.0, "prot": 1.5, "gtot": 0.2, "gsat": 0.03, "gtrans": 0.0, "fibra": 1.0, "sodio": 65.0, "edulc": False, "caf": False},
-    "Hinojo, crudo": {"kcal": 24.0, "cho": 4.2, "azuc_tot": 3.9, "azuc_anad": 0.0, "prot": 1.2, "gtot": 0.2, "gsat": 0.09, "gtrans": 0.0, "fibra": 3.1, "sodio": 52.0, "edulc": False, "caf": False},
-    "Hinojo, hervido": {"kcal": 24.0, "cho": 4.2, "azuc_tot": 3.9, "azuc_anad": 0.0, "prot": 1.2, "gtot": 0.2, "gsat": 0.09, "gtrans": 0.0, "fibra": 3.1, "sodio": 52.0, "edulc": False, "caf": False},
-    "Hongos, secos": {"kcal": 303.0, "cho": 63.9, "azuc_tot": 2.2, "azuc_anad": 0.0, "prot": 9.6, "gtot": 1.0, "gsat": 0.23, "gtrans": 0.0, "fibra": 11.5, "sodio": 13.0, "edulc": False, "caf": False},
-    "Kale, crudo": {"kcal": 26.0, "cho": 0.3, "azuc_tot": 1.0, "azuc_anad": 0.0, "prot": 2.9, "gtot": 1.5, "gsat": 0.1, "gtrans": 0.0, "fibra": 4.1, "sodio": 53.0, "edulc": False, "caf": False},
     "Lechuga, cruda": {"kcal": 12.0, "cho": 1.4, "azuc_tot": 1.2, "azuc_anad": 0.0, "prot": 1.2, "gtot": 0.2, "gsat": 0.01, "gtrans": 0.0, "fibra": 1.4, "sodio": 13.0, "edulc": False, "caf": False},
     "Mandioca, cruda": {"kcal": 153.0, "cho": 36.3, "azuc_tot": 1.7, "azuc_anad": 0.0, "prot": 1.4, "gtot": 0.3, "gsat": 0.07, "gtrans": 0.0, "fibra": 1.8, "sodio": 14.0, "edulc": False, "caf": False},
-    "Mandioca, hervida": {"kcal": 153.0, "cho": 36.3, "azuc_tot": 1.7, "azuc_anad": 0.0, "prot": 1.4, "gtot": 0.3, "gsat": 0.07, "gtrans": 0.0, "fibra": 1.8, "sodio": 14.0, "edulc": False, "caf": False},
     "Palmitos, enlatados": {"kcal": 25.0, "cho": 2.2, "azuc_tot": 2.4, "azuc_anad": 0.0, "prot": 2.5, "gtot": 0.6, "gsat": 0.13, "gtrans": 0.0, "fibra": 2.4, "sodio": 426.0, "edulc": False, "caf": False},
-    "Pepino, crudo": {"kcal": 12.0, "cho": 2.0, "azuc_tot": 1.4, "azuc_anad": 0.0, "prot": 0.7, "gtot": 0.1, "gsat": 0.08, "gtrans": 0.0, "fibra": 0.7, "sodio": 13.0, "edulc": False, "caf": False},
-    "Perejil, crudo": {"kcal": 47.0, "cho": 5.7, "azuc_tot": 3.3, "azuc_anad": 0.0, "prot": 3.7, "gtot": 1.0, "gsat": 0.13, "gtrans": 0.0, "fibra": 0.9, "sodio": 56.0, "edulc": False, "caf": False},
-    "Pickles, en vinagre": {"kcal": 7.0, "cho": 1.1, "azuc_tot": 1.1, "azuc_anad": 0.0, "prot": 0.3, "gtot": 0.2, "gsat": 0.05, "gtrans": 0.0, "fibra": 1.2, "sodio": 1208.0, "edulc": False, "caf": False},
+    "Papa, cruda": {"kcal": 79.0, "cho": 16.9, "azuc_tot": 1.2, "azuc_anad": 0.0, "prot": 2.7, "gtot": 0.1, "gsat": 0.0, "gtrans": 0.0, "fibra": 2.4, "sodio": 24.0, "edulc": False, "caf": False},
+    "Papa, hervida": {"kcal": 81.0, "cho": 18.2, "azuc_tot": 1.8, "azuc_anad": 0.0, "prot": 1.7, "gtot": 0.1, "gsat": 0.03, "gtrans": 0.0, "fibra": 0.9, "sodio": 5.0, "edulc": False, "caf": False},
     "Puerro, crudo": {"kcal": 38.0, "cho": 6.1, "azuc_tot": 1.8, "azuc_anad": 0.0, "prot": 2.5, "gtot": 0.4, "gsat": 0.04, "gtrans": 0.0, "fibra": 1.8, "sodio": 81.0, "edulc": False, "caf": False},
-    "Puerro, hervido": {"kcal": 32.0, "cho": 6.62, "azuc_tot": 1.0, "azuc_anad": 0.0, "prot": 0.81, "gtot": 0.2, "gsat": 0.027, "gtrans": 0.0, "fibra": 2.11, "sodio": 10.0, "edulc": False, "caf": False},
-    "Rabanito, crudo": {"kcal": 23.0, "cho": 4.2, "azuc_tot": 1.9, "azuc_anad": 0.0, "prot": 1.3, "gtot": 0.1, "gsat": 0.03, "gtrans": 0.0, "fibra": 1.6, "sodio": 39.0, "edulc": False, "caf": False},
-    "Radicheta, cruda": {"kcal": 14.0, "cho": 0.7, "azuc_tot": 4.0, "azuc_anad": 0.0, "prot": 2.2, "gtot": 0.3, "gsat": 0.07, "gtrans": 0.0, "fibra": 0.7, "sodio": 97.0, "edulc": False, "caf": False},
-    "Remolacha, cruda": {"kcal": 44.0, "cho": 8.3, "azuc_tot": 6.8, "azuc_anad": 0.0, "prot": 2.4, "gtot": 0.2, "gsat": 0.03, "gtrans": 0.0, "fibra": 2.8, "sodio": 51.0, "edulc": False, "caf": False},
-    "Remolacha, hervida": {"kcal": 40.0, "cho": 7.96, "azuc_tot": 7.96, "azuc_anad": 0.0, "prot": 1.68, "gtot": 0.18, "gsat": 0.03, "gtrans": 0.0, "fibra": 2.0, "sodio": 77.0, "edulc": False, "caf": False},
-    "Repollito de Bruselas, crudos": {"kcal": 43.0, "cho": 5.1, "azuc_tot": 3.8, "azuc_anad": 0.0, "prot": 4.4, "gtot": 0.5, "gsat": 0.06, "gtrans": 0.0, "fibra": 2.2, "sodio": 25.0, "edulc": False, "caf": False},
-    "Repollo, crudo": {"kcal": 19.0, "cho": 3.3, "azuc_tot": 2.5, "azuc_anad": 0.0, "prot": 1.3, "gtot": 0.1, "gsat": 0.03, "gtrans": 0.0, "fibra": 2.5, "sodio": 18.0, "edulc": False, "caf": False},
     "Rúcula, cruda": {"kcal": 24.0, "cho": 2.1, "azuc_tot": 2.1, "azuc_anad": 0.0, "prot": 2.6, "gtot": 0.7, "gsat": 0.09, "gtrans": 0.0, "fibra": 1.6, "sodio": 27.0, "edulc": False, "caf": False},
     "Tomate, crudo": {"kcal": 17.0, "cho": 2.9, "azuc_tot": 1.2, "azuc_anad": 0.0, "prot": 1.0, "gtot": 0.2, "gsat": 0.03, "gtrans": 0.0, "fibra": 1.2, "sodio": 5.0, "edulc": False, "caf": False},
-    "Tomate, desecado": {"kcal": 257.0, "cho": 43.5, "azuc_tot": 37.6, "azuc_anad": 0.0, "prot": 14.1, "gtot": 3.0, "gsat": 0.43, "gtrans": 0.0, "fibra": 12.3, "sodio": 107.0, "edulc": False, "caf": False},
-    "Tomate, enlatado": {"kcal": 12.0, "cho": 1.6, "azuc_tot": 1.9, "azuc_anad": 0.0, "prot": 0.8, "gtot": 0.3, "gsat": 0.03, "gtrans": 0.0, "fibra": 2.6, "sodio": 10.0, "edulc": False, "caf": False},
     "Tomate, puré de tomate": {"kcal": 37.0, "cho": 7.1, "azuc_tot": 4.8, "azuc_anad": 0.0, "prot": 1.7, "gtot": 0.2, "gsat": 0.09, "gtrans": 0.0, "fibra": 1.9, "sodio": 67.0, "edulc": False, "caf": False},
-    "Tomates cherry, crudos": {"kcal": 23.0, "cho": 3.6, "azuc_tot": 3.6, "azuc_anad": 0.0, "prot": 1.1, "gtot": 0.5, "gsat": 0.03, "gtrans": 0.0, "fibra": 1.3, "sodio": 4.0, "edulc": False, "caf": False},
     "Zanahoria, cruda": {"kcal": 43.0, "cho": 4.7, "azuc_tot": 2.8, "azuc_anad": 0.0, "prot": 1.1, "gtot": 0.2, "gsat": 0.01, "gtrans": 0.0, "fibra": 4.5, "sodio": 22.0, "edulc": False, "caf": False},
     "Zanahoria, hervida": {"kcal": 26.0, "cho": 5.2, "azuc_tot": 3.0, "azuc_anad": 0.0, "prot": 0.8, "gtot": 0.2, "gsat": 0.03, "gtrans": 0.0, "fibra": 3.0, "sodio": 58.0, "edulc": False, "caf": False},
     "Zapallito, crudo": {"kcal": 15.0, "cho": 1.0, "azuc_tot": 2.1, "azuc_anad": 0.0, "prot": 0.8, "gtot": 0.3, "gsat": 0.09, "gtrans": 0.0, "fibra": 2.1, "sodio": 2.0, "edulc": False, "caf": False},
-    "Zapallito, hervido": {"kcal": 15.0, "cho": 1.0, "azuc_tot": 1.7, "azuc_anad": 0.0, "prot": 1.1, "gtot": 0.1, "gsat": 0.08, "gtrans": 0.0, "fibra": 1.7, "sodio": 2.0, "edulc": False, "caf": False},
     "Zapallo, crudo": {"kcal": 36.0, "cho": 2.5, "azuc_tot": 1.3, "azuc_anad": 0.0, "prot": 1.0, "gtot": 0.1, "gsat": 0.07, "gtrans": 0.0, "fibra": 5.3, "sodio": 3.0, "edulc": False, "caf": False},
     "Zapallo, hervido": {"kcal": 28.0, "cho": 6.2, "azuc_tot": 2.5, "azuc_anad": 0.0, "prot": 0.7, "gtot": 0.1, "gsat": 0.04, "gtrans": 0.0, "fibra": 2.6, "sodio": 3.0, "edulc": False, "caf": False},
     "Zucchini, crudo": {"kcal": 16.0, "cho": 2.1, "azuc_tot": 2.5, "azuc_anad": 0.0, "prot": 1.2, "gtot": 0.3, "gsat": 0.09, "gtrans": 0.0, "fibra": 1.0, "sodio": 8.0, "edulc": False, "caf": False},
-    "Zucchini, hervido": {"kcal": 16.0, "cho": 2.1, "azuc_tot": 2.5, "azuc_anad": 0.0, "prot": 1.2, "gtot": 0.3, "gsat": 0.09, "gtrans": 0.0, "fibra": 1.0, "sodio": 9.0, "edulc": False, "caf": False},
 
     # --- FRUTAS (SARA 2) ---
-    "Aceituna negra": {"kcal": 119.0, "cho": 4.4, "azuc_tot": 1.6, "azuc_anad": 0.0, "prot": 0.8, "gtot": 10.9, "gsat": 2.28, "gtrans": 0.0, "fibra": 1.6, "sodio": 735.0, "edulc": False, "caf": False},
-    "Aceituna verde": {"kcal": 130.0, "cho": 0.5, "azuc_tot": 0.5, "azuc_anad": 0.0, "prot": 1.5, "gtot": 13.5, "gsat": 2.03, "gtrans": 0.0, "fibra": 3.3, "sodio": 1556.0, "edulc": False, "caf": False},
-    "Ananá": {"kcal": 50.0, "cho": 11.7, "azuc_tot": 9.9, "azuc_anad": 0.0, "prot": 0.4, "gtot": 0.2, "gsat": 0.01, "gtrans": 0.0, "fibra": 1.4, "sodio": 2.0, "edulc": False, "caf": False},
     "Banana": {"kcal": 92.0, "cho": 20.4, "azuc_tot": 12.2, "azuc_anad": 0.0, "prot": 1.2, "gtot": 0.2, "gsat": 0.112, "gtrans": 0.0, "fibra": 2.6, "sodio": 1.0, "edulc": False, "caf": False},
-    "Ciruela": {"kcal": 51.0, "cho": 11.5, "azuc_tot": 9.9, "azuc_anad": 0.0, "prot": 0.7, "gtot": 0.2, "gsat": 0.02, "gtrans": 0.0, "fibra": 1.4, "sodio": 2.0, "edulc": False, "caf": False},
-    "Ciruela pasa / ciruela seca": {"kcal": 236.0, "cho": 56.8, "azuc_tot": 38.1, "azuc_anad": 0.0, "prot": 1.9, "gtot": 0.1, "gsat": 0.09, "gtrans": 0.0, "fibra": 7.1, "sodio": 21.0, "edulc": False, "caf": False},
-    "Coco rallado": {"kcal": 504.0, "cho": 43.2, "azuc_tot": 43.2, "azuc_anad": 35.8, "prot": 2.9, "gtot": 35.5, "gsat": 31.47, "gtrans": 0.0, "fibra": 4.5, "sodio": 262.0, "edulc": False, "caf": False},
-    "Durazno": {"kcal": 45.0, "cho": 10.5, "azuc_tot": 8.4, "azuc_anad": 0.0, "prot": 0.5, "gtot": 0.1, "gsat": 0.02, "gtrans": 0.0, "fibra": 1.5, "sodio": 3.0, "edulc": False, "caf": False},
-    "Frambuesa": {"kcal": 32.0, "cho": 5.4, "azuc_tot": 4.4, "azuc_anad": 0.0, "prot": 1.2, "gtot": 0.7, "gsat": 0.02, "gtrans": 0.0, "fibra": 6.5, "sodio": 1.0, "edulc": False, "caf": False},
-    "Frutilla": {"kcal": 31.0, "cho": 5.7, "azuc_tot": 4.9, "azuc_anad": 0.0, "prot": 0.8, "gtot": 0.6, "gsat": 0.02, "gtrans": 0.0, "fibra": 2.0, "sodio": 2.0, "edulc": False, "caf": False},
-    "Higo": {"kcal": 74.0, "cho": 16.3, "azuc_tot": 16.3, "azuc_anad": 0.0, "prot": 1.4, "gtot": 0.4, "gsat": 0.06, "gtrans": 0.0, "fibra": 2.9, "sodio": 2.0, "edulc": False, "caf": False},
-    "Kiwi": {"kcal": 56.0, "cho": 11.7, "azuc_tot": 9.0, "azuc_anad": 0.0, "prot": 0.5, "gtot": 1.1, "gsat": 0.05, "gtrans": 0.0, "fibra": 3.0, "sodio": 3.0, "edulc": False, "caf": False},
-    "Limón": {"kcal": 35.0, "cho": 6.5, "azuc_tot": 2.5, "azuc_anad": 0.0, "prot": 0.9, "gtot": 0.6, "gsat": 0.09, "gtrans": 0.0, "fibra": 2.8, "sodio": 6.0, "edulc": False, "caf": False},
-    "Mandarina": {"kcal": 52.0, "cho": 11.5, "azuc_tot": 10.6, "azuc_anad": 0.0, "prot": 0.8, "gtot": 0.3, "gsat": 0.04, "gtrans": 0.0, "fibra": 1.8, "sodio": 2.0, "edulc": False, "caf": False},
-    "Mango": {"kcal": 60.0, "cho": 13.4, "azuc_tot": 13.7, "azuc_anad": 0.0, "prot": 0.8, "gtot": 0.4, "gsat": 0.09, "gtrans": 0.0, "fibra": 1.6, "sodio": 1.0, "edulc": False, "caf": False},
     "Manzana con piel": {"kcal": 48.0, "cho": 11.4, "azuc_tot": 10.4, "azuc_anad": 0.0, "prot": 0.3, "gtot": 0.2, "gsat": 0.03, "gtrans": 0.0, "fibra": 2.4, "sodio": 1.0, "edulc": False, "caf": False},
-    "Manzana sin piel": {"kcal": 59.0, "cho": 13.6, "azuc_tot": 10.1, "azuc_anad": 0.0, "prot": 0.4, "gtot": 0.3, "gsat": 0.04, "gtrans": 0.0, "fibra": 1.3, "sodio": 5.0, "edulc": False, "caf": False},
     "Naranja": {"kcal": 43.0, "cho": 9.35, "azuc_tot": 9.35, "azuc_anad": 0.0, "prot": 0.94, "gtot": 0.12, "gsat": 0.023, "gtrans": 0.0, "fibra": 2.4, "sodio": 0.0, "edulc": False, "caf": False},
+    "Frutilla": {"kcal": 31.0, "cho": 5.7, "azuc_tot": 4.9, "azuc_anad": 0.0, "prot": 0.8, "gtot": 0.6, "gsat": 0.02, "gtrans": 0.0, "fibra": 2.0, "sodio": 2.0, "edulc": False, "caf": False},
+    "Limón": {"kcal": 35.0, "cho": 6.5, "azuc_tot": 2.5, "azuc_anad": 0.0, "prot": 0.9, "gtot": 0.6, "gsat": 0.09, "gtrans": 0.0, "fibra": 2.8, "sodio": 6.0, "edulc": False, "caf": False},
     "Palta": {"kcal": 190.0, "cho": 1.8, "azuc_tot": 0.7, "azuc_anad": 0.0, "prot": 1.9, "gtot": 19.5, "gsat": 4.1, "gtrans": 0.0, "fibra": 6.7, "sodio": 7.0, "edulc": False, "caf": False},
     "Pera": {"kcal": 55.0, "cho": 12.1, "azuc_tot": 9.8, "azuc_anad": 0.0, "prot": 0.7, "gtot": 0.4, "gsat": 0.02, "gtrans": 0.0, "fibra": 3.1, "sodio": 2.0, "edulc": False, "caf": False},
     "Uva": {"kcal": 73.0, "cho": 17.2, "azuc_tot": 15.5, "azuc_anad": 0.0, "prot": 0.7, "gtot": 0.2, "gsat": 0.05, "gtrans": 0.0, "fibra": 0.9, "sodio": 2.0, "edulc": False, "caf": False},
-    "Uva pasa": {"kcal": 315.0, "cho": 74.8, "azuc_tot": 65.2, "azuc_anad": 0.0, "prot": 3.3, "gtot": 0.3, "gsat": 0.09, "gtrans": 0.0, "fibra": 4.5, "sodio": 26.0, "edulc": False, "caf": False}
+    "Uva pasa": {"kcal": 315.0, "cho": 74.8, "azuc_tot": 65.2, "azuc_anad": 0.0, "prot": 3.3, "gtot": 0.3, "gsat": 0.09, "gtrans": 0.0, "fibra": 4.5, "sodio": 26.0, "edulc": False, "caf": False},
+
+    # --- SÉMOLAS, HARINAS Y CEREALES ---
+    "Sémola de trigo / Semolín candeal": {"kcal": 336.0, "cho": 72.8, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 12.7, "gtot": 1.1, "gsat": 0.15, "gtrans": 0.0, "fibra": 3.9, "sodio": 1.0, "edulc": False, "caf": False},
+    "Semolín para pastas secas o frescas": {"kcal": 336.0, "cho": 72.8, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 12.7, "gtot": 1.1, "gsat": 0.15, "gtrans": 0.0, "fibra": 3.9, "sodio": 1.0, "edulc": False, "caf": False},
+    "Gluten puro de trigo en polvo": {"kcal": 370.0, "cho": 13.8, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 75.0, "gtot": 1.9, "gsat": 0.3, "gtrans": 0.0, "fibra": 1.5, "sodio": 70.0, "edulc": False, "caf": False},
+    "Seitán / Carne vegetal de gluten": {"kcal": 120.0, "cho": 4.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 21.0, "gtot": 1.5, "gsat": 0.2, "gtrans": 0.0, "fibra": 0.6, "sodio": 350.0, "edulc": False, "caf": False},
+    "Pan de gluten": {"kcal": 231.0, "cho": 40.8, "azuc_tot": 3.0, "azuc_anad": 0.0, "prot": 12.1, "gtot": 2.2, "gsat": 0.33, "gtrans": 0.0, "fibra": 1.4, "sodio": 404.0, "edulc": False, "caf": False},
+    "Tostadas de gluten": {"kcal": 335.0, "cho": 61.3, "azuc_tot": 3.5, "azuc_anad": 0.2, "prot": 20.0, "gtot": 1.1, "gsat": 0.1, "gtrans": 0.0, "fibra": 3.5, "sodio": 325.0, "edulc": False, "caf": False},
+    "Harina de trigo 000 fortificada": {"kcal": 329.0, "cho": 69.8, "azuc_tot": 0.3, "azuc_anad": 0.0, "prot": 10.3, "gtot": 1.0, "gsat": 0.16, "gtrans": 0.0, "fibra": 4.0, "sodio": 7.0, "edulc": False, "caf": False},
+    "Harina de trigo 0000 fortificada": {"kcal": 353.0, "cho": 74.0, "azuc_tot": 0.2, "azuc_anad": 0.0, "prot": 11.6, "gtot": 0.9, "gsat": 0.15, "gtrans": 0.0, "fibra": 2.5, "sodio": 7.0, "edulc": False, "caf": False},
+    "Harina de trigo integral": {"kcal": 308.0, "cho": 58.8, "azuc_tot": 1.0, "azuc_anad": 0.0, "prot": 11.4, "gtot": 3.0, "gsat": 0.43, "gtrans": 0.0, "fibra": 12.6, "sodio": 16.0, "edulc": False, "caf": False},
+    "Harina leudante": {"kcal": 329.0, "cho": 69.8, "azuc_tot": 0.3, "azuc_anad": 0.0, "prot": 10.3, "gtot": 1.0, "gsat": 0.16, "gtrans": 0.0, "fibra": 4.0, "sodio": 714.0, "edulc": False, "caf": False},
+    "Salvado de trigo": {"kcal": 216.0, "cho": 64.5, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 15.5, "gtot": 5.5, "gsat": 0.89, "gtrans": 0.0, "fibra": 44.7, "sodio": 27.0, "edulc": False, "caf": False},
+    "Salvado de avena": {"kcal": 246.0, "cho": 50.8, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 17.3, "gtot": 7.0, "gsat": 1.33, "gtrans": 0.0, "fibra": 15.4, "sodio": 4.0, "edulc": False, "caf": False},
+    "Gérmen de trigo": {"kcal": 334.0, "cho": 38.6, "azuc_tot": 16.0, "azuc_anad": 0.0, "prot": 23.2, "gtot": 9.7, "gsat": 1.67, "gtrans": 0.0, "fibra": 13.2, "sodio": 12.0, "edulc": False, "caf": False},
+    "Avena arrollada instantánea / tradicional": {"kcal": 357.0, "cho": 56.9, "azuc_tot": 1.0, "azuc_anad": 0.0, "prot": 15.6, "gtot": 7.5, "gsat": 1.52, "gtrans": 0.0, "fibra": 10.4, "sodio": 2.0, "edulc": False, "caf": False},
+    "Almidón de maíz (Maicena)": {"kcal": 363.0, "cho": 90.4, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.3, "gtot": 0.1, "gsat": 0.01, "gtrans": 0.0, "fibra": 0.9, "sodio": 9.0, "edulc": False, "caf": False},
+    "Fécula / Almidón de mandioca": {"kcal": 363.0, "cho": 90.4, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.3, "gtot": 0.1, "gsat": 0.01, "gtrans": 0.0, "fibra": 0.9, "sodio": 9.0, "edulc": False, "caf": False},
+    "Harina de maíz / Polenta": {"kcal": 307.0, "cho": 64.5, "azuc_tot": 0.6, "azuc_anad": 0.0, "prot": 9.1, "gtot": 1.39, "gsat": 0.17, "gtrans": 0.0, "fibra": 8.9, "sodio": 25.0, "edulc": False, "caf": False},
+    "Harina de arroz": {"kcal": 348.0, "cho": 77.7, "azuc_tot": 0.1, "azuc_anad": 0.0, "prot": 6.0, "gtot": 1.4, "gsat": 0.39, "gtrans": 0.0, "fibra": 2.4, "sodio": 0.0, "edulc": False, "caf": False},
+    "Premezcla universal SIN TACC": {"kcal": 357.0, "cho": 82.5, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 2.8, "gtot": 1.8, "gsat": 1.0, "gtrans": 0.0, "fibra": 1.0, "sodio": 40.0, "edulc": False, "caf": False},
+    "Fideos secos de trigo": {"kcal": 352.0, "cho": 71.5, "azuc_tot": 2.7, "azuc_anad": 0.0, "prot": 13.0, "gtot": 1.5, "gsat": 0.28, "gtrans": 0.0, "fibra": 3.2, "sodio": 6.0, "edulc": False, "caf": False},
+    "Fideos frescos al huevo": {"kcal": 285.0, "cho": 54.7, "azuc_tot": 2.1, "azuc_anad": 0.0, "prot": 11.3, "gtot": 2.3, "gsat": 0.33, "gtrans": 0.0, "fibra": 3.3, "sodio": 26.0, "edulc": False, "caf": False},
+    "Lentejas secas": {"kcal": 301.0, "cho": 52.7, "azuc_tot": 2.0, "azuc_anad": 0.0, "prot": 20.8, "gtot": 0.8, "gsat": 0.15, "gtrans": 0.0, "fibra": 10.7, "sodio": 12.0, "edulc": False, "caf": False},
+    "Garbanzos secos": {"kcal": 339.0, "cho": 50.8, "azuc_tot": 10.7, "azuc_anad": 0.0, "prot": 20.5, "gtot": 6.0, "gsat": 0.60, "gtrans": 0.0, "fibra": 12.2, "sodio": 24.0, "edulc": False, "caf": False},
+    "Porotos secos": {"kcal": 276.0, "cho": 45.3, "azuc_tot": 2.1, "azuc_anad": 0.0, "prot": 21.1, "gtot": 1.1, "gsat": 0.07, "gtrans": 0.0, "fibra": 15.2, "sodio": 8.0, "edulc": False, "caf": False},
+
+    # --- LÁCTEOS, QUESOS Y HUEVOS ---
+    "Leche entera líquida": {"kcal": 58.0, "cho": 4.8, "azuc_tot": 4.8, "azuc_anad": 0.0, "prot": 3.1, "gtot": 2.9, "gsat": 1.87, "gtrans": 0.13, "fibra": 0.0, "sodio": 57.0, "edulc": False, "caf": False},
+    "Leche parcialmente descremada": {"kcal": 44.0, "cho": 4.6, "azuc_tot": 4.6, "azuc_anad": 0.0, "prot": 3.2, "gtot": 1.4, "gsat": 0.95, "gtrans": 0.09, "fibra": 0.0, "sodio": 55.0, "edulc": False, "caf": False},
+    "Leche entera en polvo": {"kcal": 480.0, "cho": 38.4, "azuc_tot": 38.4, "azuc_anad": 0.0, "prot": 25.8, "gtot": 24.8, "gsat": 15.54, "gtrans": 1.06, "fibra": 0.0, "sodio": 404.0, "edulc": False, "caf": False},
+    "Crema de leche (36% grasa)": {"kcal": 347.0, "cho": 2.8, "azuc_tot": 2.9, "azuc_anad": 0.0, "prot": 2.8, "gtot": 36.1, "gsat": 23.03, "gtrans": 1.24, "fibra": 0.0, "sodio": 27.0, "edulc": False, "caf": False},
+    "Huevo entero": {"kcal": 156.0, "cho": 0.4, "azuc_tot": 0.4, "azuc_anad": 0.0, "prot": 12.0, "gtot": 11.8, "gsat": 3.18, "gtrans": 0.0, "fibra": 0.0, "sodio": 135.0, "edulc": False, "caf": False},
+    "Huevo - Clara": {"kcal": 51.0, "cho": 0.7, "azuc_tot": 0.7, "azuc_anad": 0.0, "prot": 11.6, "gtot": 0.2, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 186.0, "edulc": False, "caf": False},
+    "Huevo - Yema": {"kcal": 339.0, "cho": 3.6, "azuc_tot": 0.6, "azuc_anad": 0.0, "prot": 16.6, "gtot": 28.7, "gsat": 10.33, "gtrans": 0.1, "fibra": 0.0, "sodio": 65.0, "edulc": False, "caf": False},
+    "Queso Cremoso": {"kcal": 310.0, "cho": 2.5, "azuc_tot": 1.8, "azuc_anad": 0.0, "prot": 20.4, "gtot": 24.9, "gsat": 13.66, "gtrans": 0.73, "fibra": 0.0, "sodio": 704.0, "edulc": False, "caf": False},
+    "Queso Muzzarella": {"kcal": 278.0, "cho": 2.4, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 23.6, "gtot": 19.3, "gsat": 13.9, "gtrans": 0.58, "fibra": 0.0, "sodio": 486.0, "edulc": False, "caf": False},
+    "Queso de máquina / Barra (Tibo)": {"kcal": 356.0, "cho": 2.2, "azuc_tot": 2.2, "azuc_anad": 0.0, "prot": 24.9, "gtot": 27.4, "gsat": 17.61, "gtrans": 0.82, "fibra": 0.0, "sodio": 819.0, "edulc": False, "caf": False},
+    "Queso Port Salut": {"kcal": 225.0, "cho": 1.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 26.3, "gtot": 12.9, "gsat": 7.15, "gtrans": 0.39, "fibra": 0.0, "sodio": 55.0, "edulc": False, "caf": False},
+    "Queso Reggianito / Sardo": {"kcal": 381.0, "cho": 3.2, "azuc_tot": 0.1, "azuc_anad": 0.0, "prot": 35.8, "gtot": 25.0, "gsat": 14.85, "gtrans": 0.75, "fibra": 0.0, "sodio": 1175.0, "edulc": False, "caf": False},
+    "Queso untable clásico": {"kcal": 284.0, "cho": 3.2, "azuc_tot": 3.2, "azuc_anad": 0.0, "prot": 7.1, "gtot": 27.0, "gsat": 16.0, "gtrans": 0.7, "fibra": 0.0, "sodio": 409.0, "edulc": False, "caf": False},
+    "Ricota entera": {"kcal": 169.0, "cho": 4.0, "azuc_tot": 0.3, "azuc_anad": 0.0, "prot": 11.6, "gtot": 11.8, "gsat": 7.28, "gtrans": 0.35, "fibra": 0.0, "sodio": 146.0, "edulc": False, "caf": False},
+
+    # --- AZÚCARES, DULCES Y CONDIMENTOS ---
+    "Azúcar blanca refinada común": {"kcal": 400.0, "cho": 100.0, "azuc_tot": 99.8, "azuc_anad": 99.8, "prot": 0.0, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 1.0, "edulc": False, "caf": False},
+    "Miel pura de abejas": {"kcal": 330.0, "cho": 82.2, "azuc_tot": 82.1, "azuc_anad": 82.1, "prot": 0.3, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.2, "sodio": 4.0, "edulc": False, "caf": False},
+    "Dulce de leche común": {"kcal": 315.0, "cho": 57.4, "azuc_tot": 49.7, "azuc_anad": 44.0, "prot": 6.5, "gtot": 6.6, "gsat": 4.07, "gtrans": 0.33, "fibra": 0.0, "sodio": 138.0, "edulc": False, "caf": False},
+    "Sal fina de mesa común (NaCl)": {"kcal": 0.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 40000.0, "edulc": False, "caf": False},
+    "Polvo de hornear": {"kcal": 96.0, "cho": 23.9, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 0.1, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.2, "sodio": 7893.0, "edulc": False, "caf": False},
+    "Agua potable": {"kcal": 0.0, "cho": 0.0, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.0, "gtot": 0.0, "gsat": 0.0, "gtrans": 0.0, "fibra": 0.0, "sodio": 5.0, "edulc": False, "caf": False}
 }
 
 lista_alimentos_completa = sorted(list(SARA2_DICT.keys()))
@@ -153,7 +184,7 @@ lista_alimentos_completa = sorted(list(SARA2_DICT.keys()))
 def receta_inicial():
     return [
         {"Ingrediente": "Sémola de trigo / Semolín candeal", "Gramos": 300.0, "Kcal": 336.0, "Carbohidratos_g": 72.8, "Azucares_Tot_g": 0.0, "Azucar_Anadido_g": 0.0, "Proteinas_g": 12.7, "Grasa_Tot_g": 1.1, "Grasa_Sat_g": 0.15, "Grasa_Trans_g": 0.0, "Fibra_g": 3.9, "Sodio_mg": 1.0, "Edulcorante": False, "Cafeina": False},
-        {"Ingrediente": "Huevo entero", "Gramos": 100.0, "Kcal": 156.0, "Carbohidratos_g": 0.4, "Azucares_Tot_g": 0.4, "Azucar_Anadido_g": 0.0, "Proteinas_g": 12.0, "Grasa_Tot_g": 11.8, "Grasa_Sat_g": 3.18, "Grasa_Trans_g": 0.0, "Fibra_g": 0.0, "Sodio_mg": 135.0, "Edulcorante": False, "Cafeina": False},
+        {"Ingrediente": "Aceite de girasol", "Gramos": 30.0, "Kcal": 900.0, "Carbohidratos_g": 0.0, "Azucares_Tot_g": 0.0, "Azucar_Anadido_g": 0.0, "Proteinas_g": 0.0, "Grasa_Tot_g": 100.0, "Grasa_Sat_g": 10.6, "Grasa_Trans_g": 0.0, "Fibra_g": 0.0, "Sodio_mg": 0.0, "Edulcorante": False, "Cafeina": False},
         {"Ingrediente": "Sal fina de mesa común (NaCl)", "Gramos": 5.0, "Kcal": 0.0, "Carbohidratos_g": 0.0, "Azucares_Tot_g": 0.0, "Azucar_Anadido_g": 0.0, "Proteinas_g": 0.0, "Grasa_Tot_g": 0.0, "Grasa_Sat_g": 0.0, "Grasa_Trans_g": 0.0, "Fibra_g": 0.0, "Sodio_mg": 40000.0, "Edulcorante": False, "Cafeina": False}
     ]
 
@@ -176,11 +207,11 @@ with tab1:
         porcion = st.number_input("Tamaño de la porción según CAA (g)", min_value=1.0, value=50.0)
 
     st.markdown("---")
-    st.subheader("1. Selección y Búsqueda de Ingredientes")
+    st.subheader("1. Selección y Búsqueda de Ingredientes (Prioridad: SARA 2)")
 
     c_f1, c_f2 = st.columns([2, 3])
     with c_f1:
-        filtro_texto = st.text_input("Filtrar por letras o palabras:", placeholder="Ej: acelga, semo, espinaca, trigo...")
+        filtro_texto = st.text_input("Filtrar por letras o palabras:", placeholder="Ej: aceite, acelga, semola, gluten, grasa...")
 
     if filtro_texto.strip():
         termino_norm = normalizar(filtro_texto.strip())
@@ -190,9 +221,9 @@ with tab1:
 
     with c_f2:
         if opciones_filtradas:
-            ing_elegido = st.selectbox(f"Ingredientes disponibles ({len(opciones_filtradas)} encontrados):", opciones_filtradas)
+            ing_elegido = st.selectbox(f"Ingredientes de SARA 2 ({len(opciones_filtradas)} encontrados):", opciones_filtradas)
         else:
-            st.warning("No se encontraron coincidencias en la base interna.")
+            st.warning("No encontrado en SARA 2. Utilizá los buscadores de referencia externa abajo.")
             ing_elegido = None
 
     if ing_elegido:
@@ -223,34 +254,47 @@ with tab1:
                 st.success(f"'{ing_elegido}' agregado a la formulación.")
                 st.rerun()
 
-    # Panel de consulta externa
-    with st.expander("🔍 Consultar en línea (FatSecret Argentina / Dieta y Nutrición)"):
-        st.write("Buscá marcas o materias primas y copiá los valores por 100 g:")
-        col_busq1, col_busq2, col_busq3 = st.columns([3, 1.5, 1.5])
-        with col_busq1:
-            termino_web = st.text_input("Término a buscar:", value=filtro_texto if filtro_texto else "")
-        with col_busq2:
-            st.write("")
-            st.write("")
-            if termino_web.strip():
-                term_fs = urllib.parse.quote(termino_web.strip())
-                st.link_button("🌐 FatSecret Arg", f"https://www.fatsecret.com.ar/calor%C3%ADas-nutrici%C3%B3n/search?q={term_fs}")
-            else:
-                st.link_button("🌐 FatSecret Arg", "https://www.fatsecret.com.ar/calor%C3%ADas-nutrici%C3%B3n/")
-        with col_busq3:
-            st.write("")
-            st.write("")
-            if termino_web.strip():
-                term_dynet = urllib.parse.quote(termino_web.strip())
-                st.link_button("🥗 Dieta y Nutrición", f"https://www.dietaynutricion.net/tabla-de-calorias-nutricional/?q={term_dynet}")
-            else:
-                st.link_button("🥗 Dieta y Nutrición", "https://www.dietaynutricion.net/tabla-de-calorias-nutricional/")
+    # Panel de acceso a bases de datos de referencia (Prioridad secundaria si no está en SARA 2)
+    with st.expander("🌐 Bases de Datos Internacionales y Comerciales de Respaldo"):
+        st.write("Si el alimento o marca no figura en SARA 2, consultá estas bases oficiales de referencia:")
+        
+        busq_term = filtro_texto.strip() if filtro_texto else "alimento"
+        term_enc = urllib.parse.quote(busq_term)
 
-    # Formulario para ingrediente manual externo
-    with st.expander("➕ Cargar ingrediente manual o externo (valores cada 100 g)"):
+        # Fila 1: Bases Latinoamericanas y Comerciales
+        b1, b2, b3 = st.columns(3)
+        with b1:
+            st.markdown("**ARGENFOODS (UNLu / Arg)**")
+            st.link_button("Abrir ARGENFOODS", "http://www.argenfoods.unlu.edu.ar/Tablas/Tabla.htm")
+        with b2:
+            st.markdown("**FatSecret Argentina (Marcas)**")
+            st.link_button(f"Buscar '{busq_term}'", f"https://www.fatsecret.com.ar/calor%C3%ADas-nutrici%C3%B3n/search?q={term_enc}")
+        with b3:
+            st.markdown("**Dieta y Nutrición**")
+            st.link_button(f"Buscar '{busq_term}'", f"https://www.dietaynutricion.net/tabla-de-calorias-nutricional/?q={term_enc}")
+
+        st.divider()
+
+        # Fila 2: Bases Globales de Alto Rango
+        b4, b5, b6, b7 = st.columns(4)
+        with b4:
+            st.markdown("**USDA FoodData Central (EE.UU.)**")
+            st.link_button("Buscar USDA", f"https://fdc.nal.usda.gov/fdc-app.html#/?query={term_enc}")
+        with b5:
+            st.markdown("**CIQUAL (Francia - ANSES)**")
+            st.link_button("Abrir CIQUAL", "https://ciqual.anses.fr/")
+        with b6:
+            st.markdown("**CoFID (Reino Unido)**")
+            st.link_button("Abrir CoFID", "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid")
+        with b7:
+            st.markdown("**FAO / INFOODS**")
+            st.link_button("Abrir FAO", "https://www.fao.org/infoods/infoods/tables-and-databases/es/")
+
+    # Formulario para incorporar alimento manual o externo
+    with st.expander("➕ Cargar ingrediente manual o desde otra base (valores cada 100 g)"):
         c_m1, c_m2, c_m3 = st.columns([3, 2, 2])
         with c_m1:
-            nombre_man = st.text_input("Nombre del ingrediente:")
+            nombre_man = st.text_input("Nombre del ingrediente / insumo:")
         with c_m2:
             gramos_man = st.number_input("Gramos usados:", min_value=0.1, value=50.0, step=5.0)
         with c_m3:
