@@ -11,11 +11,28 @@ from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(page_title="Plataforma Bromatológica - Ecomeg", layout="wide")
 
+# URL de la base de datos nutricional unificada
+URL_BASE_NUTRICIONAL = "https://docs.google.com/spreadsheets/d/1OVgb2eCNMsiGh81Zrh_q3OkWQ0_ewyYbI5dzT8mPG5A/edit?gid=1408005890#gid=1408005890"
+
 # --- CONEXIÓN A GOOGLE SHEETS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def normalizar_col(c):
     return ''.join(ch for ch in unicodedata.normalize('NFD', str(c).strip().lower()) if unicodedata.category(ch) != 'Mn')
+
+def normalizar_texto(t):
+    if not t:
+        return ""
+    return ''.join(c for c in unicodedata.normalize('NFD', str(t).lower()) if unicodedata.category(c) != 'Mn')
+
+def to_float(val, default=0.0):
+    if pd.isna(val):
+        return default
+    s = str(val).strip().replace(',', '.')
+    try:
+        return float(s)
+    except:
+        return default
 
 def obtener_usuarios():
     try:
@@ -44,10 +61,15 @@ def registrar_evento(usuario, accion, detalle=""):
     except Exception:
         pass
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=600)
 def cargar_base_alimentos():
     try:
-        df_ali = conn.read(worksheet="alimentos", ttl="60s")
+        # Intento 1: Carga desde la planilla dedicada Base_Nutricional_SARA2_ARGENFOODS
+        df_ali = conn.read(spreadsheet=URL_BASE_NUTRICIONAL, ttl="300s")
+        if df_ali is None or df_ali.empty:
+            # Intento 2: Carga desde la pestaña 'alimentos' de la planilla principal
+            df_ali = conn.read(worksheet="alimentos", ttl="60s")
+        
         if df_ali is not None and not df_ali.empty:
             df_ali = df_ali.dropna(how="all")
             df_ali.columns = [normalizar_col(c) for c in df_ali.columns]
@@ -55,27 +77,39 @@ def cargar_base_alimentos():
             base = {}
             for _, r in df_ali.iterrows():
                 nom = str(r.get("alimento", "")).strip()
-                if nom:
+                if nom and nom.lower() != "nan":
+                    cho_val = r.get("cho", r.get("carbohidratos", r.get("carbohidratos disponibles", 0.0)))
+                    az_tot = r.get("azuc_tot", r.get("azucares totales", 0.0))
+                    az_anad = r.get("azuc_anad", r.get("azucares anadidos", 0.0))
+                    prot_val = r.get("prot", r.get("proteinas", 0.0))
+                    gtot_val = r.get("gtot", r.get("grasas totales", 0.0))
+                    gsat_val = r.get("gsat", r.get("grasas saturadas", 0.0))
+                    gtrans_val = r.get("gtrans", r.get("grasas trans", 0.0))
+                    fibra_val = r.get("fibra", r.get("fibra dietetica", 0.0))
+                    sod_val = r.get("sodio", 0.0)
+                    edulc_val = str(r.get("edulc", r.get("edulcorante", ""))).strip().upper() in ["TRUE", "1", "SI", "VERDADERO"]
+                    caf_val = str(r.get("caf", r.get("cafeina", ""))).strip().upper() in ["TRUE", "1", "SI", "VERDADERO"]
+
                     base[nom] = {
-                        "kcal": float(r.get("kcal", 0.0)),
-                        "cho": float(r.get("cho", 0.0)),
-                        "azuc_tot": float(r.get("azuc_tot", 0.0)),
-                        "azuc_anad": float(r.get("azuc_anad", 0.0)),
-                        "prot": float(r.get("prot", 0.0)),
-                        "gtot": float(r.get("gtot", 0.0)),
-                        "gsat": float(r.get("gsat", 0.0)),
-                        "gtrans": float(r.get("gtrans", 0.0)),
-                        "fibra": float(r.get("fibra", 0.0)),
-                        "sodio": float(r.get("sodio", 0.0)),
-                        "edulc": str(r.get("edulc", "")).strip().upper() == "TRUE",
-                        "caf": str(r.get("caf", "")).strip().upper() == "TRUE"
+                        "kcal": to_float(r.get("kcal", 0.0)),
+                        "cho": to_float(cho_val),
+                        "azuc_tot": to_float(az_tot),
+                        "azuc_anad": to_float(az_anad),
+                        "prot": to_float(prot_val),
+                        "gtot": to_float(gtot_val),
+                        "gsat": to_float(gsat_val),
+                        "gtrans": to_float(gtrans_val),
+                        "fibra": to_float(fibra_val),
+                        "sodio": to_float(sod_val),
+                        "edulc": edulc_val,
+                        "caf": caf_val
                     }
             if base:
                 return base
-    except Exception:
-        pass
+    except Exception as e:
+        st.warning(f"Aviso de sincronización con la base de datos: {e}")
     
-    # Respaldo básico si aún no se copió la hoja
+    # Respaldo básico garantizado
     return {
         "Maíz, grano entero, crudo [SARA 2]": {"kcal": 365.0, "cho": 65.8, "azuc_tot": 1.6, "azuc_anad": 0.0, "prot": 9.4, "gtot": 4.7, "gsat": 0.67, "gtrans": 0.0, "fibra": 7.3, "sodio": 35.0, "edulc": False, "caf": False},
         "Choclo amarillo, grano, crudo [SARA 2]": {"kcal": 97.0, "cho": 17.8, "azuc_tot": 4.5, "azuc_anad": 0.0, "prot": 3.7, "gtot": 1.2, "gsat": 0.18, "gtrans": 0.0, "fibra": 2.7, "sodio": 15.0, "edulc": False, "caf": False},
@@ -167,11 +201,6 @@ if st.session_state.rol == "admin":
 else:
     tab1, tab2 = st.tabs(["📊 Calculadora & Sellos", "💬 Asistente Técnico"])
 
-def normalizar_texto(t):
-    if not t:
-        return ""
-    return ''.join(c for c in unicodedata.normalize('NFD', str(t).lower()) if unicodedata.category(c) != 'Mn')
-
 def obtener_logo_base64():
     archivos = ["Logo ECOMEG Transparente.png", "Logo ECOMEG Transparente.PNG", "logo_ecomeg.png", "ecomeg (R).png"]
     for arch in archivos:
@@ -198,11 +227,11 @@ with tab1:
         porcion = st.number_input("Porción reglamentaria CAA (g)", min_value=1.0, value=80.0)
 
     st.markdown("---")
-    st.subheader(f"1. Buscador Integrado ({len(lista_alimentos_completa)} alimentos SARA 2 y ARGENFOODS)")
+    st.subheader(f"1. Buscador y Ajuste de Ingredientes ({len(lista_alimentos_completa)} disponibles)")
     
     c_f1, c_f2 = st.columns([2, 3])
     with c_f1:
-        filtro_txt = st.text_input("Buscar insumo en ambas bases:", placeholder="Ej: maiz, choclo, chocolate, harina, queso...")
+        filtro_txt = st.text_input("Buscar insumo en la base:", placeholder="Ej: maiz, choclo, chocolate, harina, queso...")
 
     if filtro_txt.strip():
         opciones = [a for a in lista_alimentos_completa if normalizar_texto(filtro_txt) in normalizar_texto(a)]
@@ -210,26 +239,93 @@ with tab1:
         opciones = lista_alimentos_completa
 
     with c_f2:
-        ing_elegido = st.selectbox(f"Coincidencias oficiales ({len(opciones)} encontradas):", opciones) if opciones else None
+        combo_opciones = ["-- Ingresar nuevo / personalizado --"] + opciones
+        ing_elegido = st.selectbox("Seleccionar ingrediente:", combo_opciones)
 
-    if ing_elegido:
-        c_g1, c_g2 = st.columns([3, 1])
+    # Valores predefinidos según el alimento elegido
+    if ing_elegido != "-- Ingresar nuevo / personalizado --":
+        d_val = BASE_NUTRICIONAL.get(ing_elegido, {})
+        def_nombre = ing_elegido
+        def_kcal = float(d_val.get("kcal", 0.0))
+        def_cho = float(d_val.get("cho", 0.0))
+        def_az_tot = float(d_val.get("azuc_tot", 0.0))
+        def_az_anad = float(d_val.get("azuc_anad", 0.0))
+        def_prot = float(d_val.get("prot", 0.0))
+        def_gtot = float(d_val.get("gtot", 0.0))
+        def_gsat = float(d_val.get("gsat", 0.0))
+        def_gtrans = float(d_val.get("gtrans", 0.0))
+        def_fibra = float(d_val.get("fibra", 0.0))
+        def_sodio = float(d_val.get("sodio", 0.0))
+        def_edulc = bool(d_val.get("edulc", False))
+        def_caf = bool(d_val.get("caf", False))
+    else:
+        def_nombre = filtro_txt.strip() if filtro_txt.strip() else ""
+        def_kcal, def_cho, def_az_tot, def_az_anad = 0.0, 0.0, 0.0, 0.0
+        def_prot, def_gtot, def_gsat, def_gtrans = 0.0, 0.0, 0.0, 0.0
+        def_fibra, def_sodio = 0.0, 0.0
+        def_edulc, def_caf = False, False
+
+    # Panel con campos predefinidos y editables antes de incorporar
+    with st.expander("📝 Valores del ingrediente (cada 100 g - Modificables)", expanded=True):
+        c_i1, c_i2, c_i3 = st.columns([3, 1, 1])
+        with c_i1:
+            in_nombre = st.text_input("Denominación del ingrediente:", value=def_nombre)
+        with c_i2:
+            in_gramos = st.number_input("Gramos usados:", min_value=0.1, value=100.0, step=5.0)
+        with c_i3:
+            in_kcal = st.number_input("Kcal / 100g:", min_value=0.0, value=def_kcal, step=1.0)
+
+        c_m1, c_m2, c_m3, c_m4 = st.columns(4)
+        with c_m1:
+            in_cho = st.number_input("Carbohidratos (g):", min_value=0.0, value=def_cho, step=0.1)
+        with c_m2:
+            in_az_tot = st.number_input("Azúcares totales (g):", min_value=0.0, value=def_az_tot, step=0.1)
+        with c_m3:
+            in_az_anad = st.number_input("Azúcares añadidos (g):", min_value=0.0, value=def_az_anad, step=0.1)
+        with c_m4:
+            in_prot = st.number_input("Proteínas (g):", min_value=0.0, value=def_prot, step=0.1)
+
+        c_g1, c_g2, c_g3, c_g4 = st.columns(4)
         with c_g1:
-            gr_ing = st.number_input(f"Gramos de '{ing_elegido}':", min_value=0.1, value=100.0, step=5.0)
+            in_gtot = st.number_input("Grasas totales (g):", min_value=0.0, value=def_gtot, step=0.1)
         with c_g2:
+            in_gsat = st.number_input("Grasas saturadas (g):", min_value=0.0, value=def_gsat, step=0.1)
+        with c_g3:
+            in_gtrans = st.number_input("Grasas trans (g):", min_value=0.0, value=def_gtrans, step=0.01)
+        with c_g4:
+            in_fibra = st.number_input("Fibra alimentaria (g):", min_value=0.0, value=def_fibra, step=0.1)
+
+        c_s1, c_s2, c_s3 = st.columns([2, 1, 1])
+        with c_s1:
+            in_sodio = st.number_input("Sodio (mg/100g):", min_value=0.0, value=def_sodio, step=1.0)
+        with c_s2:
             st.write("")
+            in_edulc = st.checkbox("¿Edulcorante?", value=def_edulc)
+        with c_s3:
             st.write("")
-            if st.button("➕ Incorporar a la receta"):
-                d = BASE_NUTRICIONAL[ing_elegido]
+            in_caf = st.checkbox("¿Cafeína?", value=def_caf)
+
+        if st.button("➕ Incorporar a la receta", type="primary"):
+            if in_nombre.strip():
                 st.session_state.receta.append({
-                    "Ingrediente": ing_elegido, "Gramos": float(gr_ing), "Kcal": float(d["kcal"]),
-                    "Carbohidratos_g": float(d["cho"]), "Azucares_Tot_g": float(d["azuc_tot"]),
-                    "Azucar_Anadido_g": float(d["azuc_anad"]), "Proteinas_g": float(d["prot"]),
-                    "Grasa_Tot_g": float(d["gtot"]), "Grasa_Sat_g": float(d["gsat"]),
-                    "Grasa_Trans_g": float(d["gtrans"]), "Fibra_g": float(d["fibra"]),
-                    "Sodio_mg": float(d["sodio"]), "Edulcorante": bool(d["edulc"]), "Cafeina": bool(d["caf"])
+                    "Ingrediente": in_nombre.strip(),
+                    "Gramos": float(in_gramos),
+                    "Kcal": float(in_kcal),
+                    "Carbohidratos_g": float(in_cho),
+                    "Azucares_Tot_g": float(in_az_tot),
+                    "Azucar_Anadido_g": float(in_az_anad),
+                    "Proteinas_g": float(in_prot),
+                    "Grasa_Tot_g": float(in_gtot),
+                    "Grasa_Sat_g": float(in_gsat),
+                    "Grasa_Trans_g": float(in_gtrans),
+                    "Fibra_g": float(in_fibra),
+                    "Sodio_mg": float(in_sodio),
+                    "Edulcorante": bool(in_edulc),
+                    "Cafeina": bool(in_caf)
                 })
                 st.rerun()
+            else:
+                st.error("Por favor, ingresá una denominación para el ingrediente.")
 
     st.markdown("---")
     st.subheader("2. Formulación actual")
