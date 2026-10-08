@@ -45,17 +45,30 @@ def redondear_entero(val):
     else:
         return int(parte_entera)
 
-# --- REGLA OFICIAL DE FORMATO Y DECIMALES DEL CAA ---
-def formatear_caa(val):
+# --- REGLA OFICIAL DE DECIMALES Y REDONDEO DEL CAA ---
+# Devuelve el valor numérico flotante ya ajustado según la regla:
+# >= 10: entero | 1 a <10: 1 decimal | < 1: 2 decimales
+def valor_reglamentario_caa(val):
     v = float(val)
+    if v <= 0:
+        return 0.0
+    if v >= 10.0:
+        return float(redondear_entero(v))
+    elif v >= 1.0:
+        return float(redondear_entero(v * 10.0) / 10.0)
+    else:
+        return float(redondear_entero(v * 100.0) / 100.0)
+
+def formatear_caa(val):
+    v = valor_reglamentario_caa(val)
     if v <= 0:
         return "0"
     if v >= 10.0:
-        return f"{redondear_entero(v)}"
+        return f"{int(v)}"
     elif v >= 1.0:
-        return f"{redondear_entero(v * 10) / 10:.1f}"
+        return f"{v:.1f}"
     else:
-        return f"{redondear_entero(v * 100) / 100:.2f}"
+        return f"{v:.2f}"
 
 def obtener_usuarios():
     try:
@@ -100,12 +113,12 @@ def cargar_base_alimentos():
 
                 nom_display = f"{nom_raw} [SARA]"
 
-                # Mapeo exacto de columnas en SARA:
+                # Mapeo en SARA:
                 # Col A (0): Alimento
                 # Col B (1): Valor energético
                 # Col D (3): Proteínas
                 # Col E (4): Lípidos totales
-                # Col G (6): Ácidos grasos Saturados (Columna G)
+                # Col G (6): Saturados (Columna G)
                 # Col J (9): Trans
                 # Col Q (16): Carbohidratos totales (Columna Q)
                 # Col R (17): Azúcar total
@@ -113,10 +126,10 @@ def cargar_base_alimentos():
                 # Col T (19): Fibra alimentaria
                 # Col W (22): Sodio (mg)
 
-                cho_val = to_float(r.iloc[16]) if len(r) > 16 else 0.0  # Columna Q: Carbohidratos totales
+                cho_val = to_float(r.iloc[16]) if len(r) > 16 else 0.0
                 prot_val = to_float(r.iloc[3]) if len(r) > 3 else 0.0
                 gtot_val = to_float(r.iloc[4]) if len(r) > 4 else 0.0
-                gsat_val = to_float(r.iloc[6]) if len(r) > 6 else 0.0  # Columna G: Grasas saturadas
+                gsat_val = to_float(r.iloc[6]) if len(r) > 6 else 0.0
                 gtrans_val = to_float(r.iloc[9]) if len(r) > 9 else 0.0
                 az_tot = to_float(r.iloc[17]) if len(r) > 17 else 0.0
                 az_anad = to_float(r.iloc[18]) if len(r) > 18 else 0.0
@@ -159,7 +172,7 @@ def cargar_base_alimentos():
                 if nom_display in base:
                     continue
 
-                # Mapeo exacto de columnas en ARGENFOODS:
+                # Mapeo en ARGENFOODS:
                 # Col A (0): Alimento
                 # Col D (3): Energía (Kcal)
                 # Col F (5): Proteínas (g)
@@ -171,9 +184,9 @@ def cargar_base_alimentos():
 
                 prot_val = to_float(r.iloc[5]) if len(r) > 5 else 0.0
                 gtot_val = to_float(r.iloc[6]) if len(r) > 6 else 0.0
-                cho_val = to_float(r.iloc[7]) if len(r) > 7 else 0.0   # Columna H: Carbohidratos totales
+                cho_val = to_float(r.iloc[7]) if len(r) > 7 else 0.0
                 fibra_val = to_float(r.iloc[9]) if len(r) > 9 else 0.0
-                gsat_val = to_float(r.iloc[11]) if len(r) > 11 else 0.0 # Columna L: Grasas saturadas
+                gsat_val = to_float(r.iloc[11]) if len(r) > 11 else 0.0
                 sod_val = to_float(r.iloc[15]) if len(r) > 15 else 0.0
 
                 kcal_val = to_float(r.iloc[3]) if len(r) > 3 else 0.0
@@ -558,58 +571,68 @@ with tab1:
             tiene_edulcorante = any(bool(r.get("Edulcorante", False)) for _, r in df_l.iterrows())
             tiene_cafeina = any(bool(r.get("Cafeina", False)) for _, r in df_l.iterrows())
 
-            # --- CÁLCULO CADA 100 g (Masa Cocida / Neta) ---
+            # --- VALORES CRUDOS (CADA 100 g Y PORCIÓN) ---
             f100 = 100.0 / peso_cocido
-            c_cho = tot_cho * f100
-            c_az_tot = tot_az_tot * f100
-            c_az_anad = tot_az_anad * f100
-            c_prot = tot_prot * f100
-            c_gt = tot_gt * f100
-            c_gs = tot_gs * f100
-            c_gtr = tot_gtr * f100
-            c_fib = tot_fib * f100
-            c_sod = tot_sod * f100
+            raw_c_cho = tot_cho * f100
+            raw_c_az_tot = tot_az_tot * f100
+            raw_c_az_anad = tot_az_anad * f100
+            raw_c_prot = tot_prot * f100
+            raw_c_gt = tot_gt * f100
+            raw_c_gs = tot_gs * f100
+            raw_c_gtr = tot_gtr * f100
+            raw_c_fib = tot_fib * f100
+            raw_c_sod = tot_sod * f100
 
-            # Kcal cada 100g = ((cho + prot) * 4) + (gt * 9) -> ENTERO ARITMÉTICO
-            c_kcal = redondear_entero(((c_cho + c_prot) * 4.0) + (c_gt * 9.0))
-            # kJ cada 100g = c_kcal * 8400 / 2000 -> ENTERO ARITMÉTICO
+            f_p = porcion / 100.0
+            raw_p_cho = raw_c_cho * f_p
+            raw_p_az_tot = raw_c_az_tot * f_p
+            raw_p_az_anad = raw_c_az_anad * f_p
+            raw_p_prot = raw_c_prot * f_p
+            raw_p_gt = raw_c_gt * f_p
+            raw_p_gs = raw_c_gs * f_p
+            raw_p_gtr = raw_c_gtr * f_p
+            raw_p_fib = raw_c_fib * f_p
+            raw_p_sod = raw_c_sod * f_p
+
+            # --- VALORES DECLARADOS REGLAMENTARIOS (CON REGLAS DE DECIMALES DEL CAA) ---
+            # Cada 100 g:
+            dec_c_cho = valor_reglamentario_caa(raw_c_cho)
+            dec_c_prot = valor_reglamentario_caa(raw_c_prot)
+            dec_c_gt = valor_reglamentario_caa(raw_c_gt)
+
+            # Por porción:
+            dec_p_cho = valor_reglamentario_caa(raw_p_cho)
+            dec_p_prot = valor_reglamentario_caa(raw_p_prot)
+            dec_p_gt = valor_reglamentario_caa(raw_p_gt)
+
+            # --- CÁLCULO DE ENERGÍA BASADO EN LOS VALORES DECLARADOS DEL RÓTULO ---
+            # Cada 100 g:
+            c_kcal = redondear_entero(((dec_c_cho + dec_c_prot) * 4.0) + (dec_c_gt * 9.0))
             c_kj = redondear_entero(c_kcal * (8400.0 / 2000.0))
 
-            # --- CÁLCULO POR PORCIÓN ---
-            f_p = porcion / 100.0
-            p_cho = c_cho * f_p
-            p_az_tot = c_az_tot * f_p
-            p_az_anad = c_az_anad * f_p
-            p_prot = c_prot * f_p
-            p_gt = c_gt * f_p
-            p_gs = c_gs * f_p
-            p_gtr = c_gtr * f_p
-            p_fib = c_fib * f_p
-            p_sod = c_sod * f_p
-
-            # Kcal por porción = ((p_cho + p_prot) * 4) + (p_gt * 9) -> ENTERO ARITMÉTICO (>= 0.5 suma 1)
-            p_kcal = redondear_entero(((p_cho + p_prot) * 4.0) + (p_gt * 9.0))
-            # kJ por porción = p_kcal * 8400 / 2000 -> ENTERO ARITMÉTICO
+            # Por porción (con los macronutrientes declarados en la tabla):
+            # (9.8 + 0.96) * 4 + (2.3 * 9) = 63.74 -> 64 kcal
+            p_kcal = redondear_entero(((dec_p_cho + dec_p_prot) * 4.0) + (dec_p_gt * 9.0))
             p_kj = redondear_entero(p_kcal * (8400.0 / 2000.0))
 
             # --- VALORES DIARIOS (%VD) - SIEMPRE ENTEROS ---
             vd_kcal = redondear_entero((p_kcal / 2000.0) * 100)
-            vd_cho = redondear_entero((p_cho / 300.0) * 100)
-            vd_prot = redondear_entero((p_prot / 75.0) * 100)
-            vd_gt = redondear_entero((p_gt / 55.0) * 100)
-            vd_gs = redondear_entero((p_gs / 22.0) * 100)
-            vd_fib = redondear_entero((p_fib / 25.0) * 100)
-            vd_sod = redondear_entero((p_sod / 2000.0) * 100)
+            vd_cho = redondear_entero((dec_p_cho / 300.0) * 100)
+            vd_prot = redondear_entero((dec_p_prot / 75.0) * 100)
+            vd_gt = redondear_entero((dec_p_gt / 55.0) * 100)
+            vd_gs = redondear_entero((valor_reglamentario_caa(raw_p_gs) / 22.0) * 100)
+            vd_fib = redondear_entero((valor_reglamentario_caa(raw_p_fib) / 25.0) * 100)
+            vd_sod = redondear_entero((valor_reglamentario_caa(raw_p_sod) / 2000.0) * 100)
 
             # --- EVALUACIÓN DE SELLOS (LEY 27.642) ---
             sellos = []
-            if c_az_anad > 0 and c_kcal > 0 and ((c_az_anad * 4.0) / c_kcal) >= 0.10:
+            if raw_c_az_anad > 0 and c_kcal > 0 and ((raw_c_az_anad * 4.0) / c_kcal) >= 0.10:
                 sellos.append("EXCESO EN AZÚCARES")
-            if c_gt > 0 and c_kcal > 0 and ((c_gt * 9.0) / c_kcal) >= 0.30:
+            if raw_c_gt > 0 and c_kcal > 0 and ((raw_c_gt * 9.0) / c_kcal) >= 0.30:
                 sellos.append("EXCESO EN GRASAS TOTALES")
-            if c_gs > 0 and c_kcal > 0 and ((c_gs * 9.0) / c_kcal) >= 0.10:
+            if raw_c_gs > 0 and c_kcal > 0 and ((raw_c_gs * 9.0) / c_kcal) >= 0.10:
                 sellos.append("EXCESO EN GRASAS SATURADAS")
-            if c_sod > 0 and ((c_kcal > 0 and (c_sod / c_kcal) >= 1.0) or (c_sod >= 300.0)):
+            if raw_c_sod > 0 and ((c_kcal > 0 and (raw_c_sod / c_kcal) >= 1.0) or (raw_c_sod >= 300.0)):
                 sellos.append("EXCESO EN SODIO")
             if any(s in ["EXCESO EN AZÚCARES", "EXCESO EN GRASAS TOTALES", "EXCESO EN GRASAS SATURADAS"] for s in sellos) and c_kcal >= 275.0:
                 sellos.append("EXCESO EN CALORÍAS")
@@ -628,27 +651,27 @@ with tab1:
                     ],
                     "Cada 100 g": [
                         f"{c_kcal} kcal = {c_kj} kJ",
-                        f"{formatear_caa(c_cho)} g",
-                        f"{formatear_caa(c_az_tot)} g",
-                        f"{formatear_caa(c_az_anad)} g",
-                        f"{formatear_caa(c_prot)} g",
-                        f"{formatear_caa(c_gt)} g",
-                        f"{formatear_caa(c_gs)} g",
-                        f"{formatear_caa(c_gtr)} g",
-                        f"{formatear_caa(c_fib)} g",
-                        f"{formatear_caa(c_sod)} mg"
+                        f"{formatear_caa(raw_c_cho)} g",
+                        f"{formatear_caa(raw_c_az_tot)} g",
+                        f"{formatear_caa(raw_c_az_anad)} g",
+                        f"{formatear_caa(raw_c_prot)} g",
+                        f"{formatear_caa(raw_c_gt)} g",
+                        f"{formatear_caa(raw_c_gs)} g",
+                        f"{formatear_caa(raw_c_gtr)} g",
+                        f"{formatear_caa(raw_c_fib)} g",
+                        f"{formatear_caa(raw_c_sod)} mg"
                     ],
                     f"Por porción ({porcion:.0f} g)": [
                         f"{p_kcal} kcal = {p_kj} kJ",
-                        f"{formatear_caa(p_cho)} g",
-                        f"{formatear_caa(p_az_tot)} g",
-                        f"{formatear_caa(p_az_anad)} g",
-                        f"{formatear_caa(p_prot)} g",
-                        f"{formatear_caa(p_gt)} g",
-                        f"{formatear_caa(p_gs)} g",
-                        f"{formatear_caa(p_gtr)} g",
-                        f"{formatear_caa(p_fib)} g",
-                        f"{formatear_caa(p_sod)} mg"
+                        f"{formatear_caa(raw_p_cho)} g",
+                        f"{formatear_caa(raw_p_az_tot)} g",
+                        f"{formatear_caa(raw_p_az_anad)} g",
+                        f"{formatear_caa(raw_p_prot)} g",
+                        f"{formatear_caa(raw_p_gt)} g",
+                        f"{formatear_caa(raw_p_gs)} g",
+                        f"{formatear_caa(raw_p_gtr)} g",
+                        f"{formatear_caa(raw_p_fib)} g",
+                        f"{formatear_caa(raw_p_sod)} mg"
                     ],
                     "%VD*": [
                         f"{vd_kcal}%", f"{vd_cho}%", "-", "-", f"{vd_prot}%", f"{vd_gt}%",
@@ -705,15 +728,15 @@ with tab1:
                     <table>
                         <tr><th>Nutriente</th><th style="text-align:right;">Cada 100 g</th><th style="text-align:right;">Porción ({porcion:.0f} g)</th><th style="text-align:center;">% VD*</th></tr>
                         <tr><td><strong>Valor energético</strong></td><td style="text-align:right;">{c_kcal} kcal = {c_kj} kJ</td><td style="text-align:right;">{p_kcal} kcal = {p_kj} kJ</td><td style="text-align:center;">{vd_kcal}%</td></tr>
-                        <tr><td><strong>Carbohidratos</strong></td><td style="text-align:right;">{formatear_caa(c_cho)} g</td><td style="text-align:right;">{formatear_caa(p_cho)} g</td><td style="text-align:center;">{vd_cho}%</td></tr>
-                        <tr><td style="padding-left:15px;">de los cuales: Azúcares totales</td><td style="text-align:right;">{formatear_caa(c_az_tot)} g</td><td style="text-align:right;">{formatear_caa(p_az_tot)} g</td><td style="text-align:center;">-</td></tr>
-                        <tr><td style="padding-left:15px;">Azúcares añadidos</td><td style="text-align:right;">{formatear_caa(c_az_anad)} g</td><td style="text-align:right;">{formatear_caa(p_az_anad)} g</td><td style="text-align:center;">-</td></tr>
-                        <tr><td><strong>Proteínas</strong></td><td style="text-align:right;">{formatear_caa(c_prot)} g</td><td style="text-align:right;">{formatear_caa(p_prot)} g</td><td style="text-align:center;">{vd_prot}%</td></tr>
-                        <tr><td><strong>Grasas totales</strong></td><td style="text-align:right;">{formatear_caa(c_gt)} g</td><td style="text-align:right;">{formatear_caa(p_gt)} g</td><td style="text-align:center;">{vd_gt}%</td></tr>
-                        <tr><td style="padding-left:15px;">Grasas saturadas</td><td style="text-align:right;">{formatear_caa(c_gs)} g</td><td style="text-align:right;">{formatear_caa(p_gs)} g</td><td style="text-align:center;">{vd_gs}%</td></tr>
-                        <tr><td style="padding-left:15px;">Grasas trans</td><td style="text-align:right;">{formatear_caa(c_gtr)} g</td><td style="text-align:right;">{formatear_caa(p_gtr)} g</td><td style="text-align:center;">-</td></tr>
-                        <tr><td><strong>Fibra alimentaria</strong></td><td style="text-align:right;">{formatear_caa(c_fib)} g</td><td style="text-align:right;">{formatear_caa(p_fib)} g</td><td style="text-align:center;">{vd_fib}%</td></tr>
-                        <tr><td><strong>Sodio</strong></td><td style="text-align:right;">{formatear_caa(c_sod)} mg</td><td style="text-align:right;">{formatear_caa(p_sod)} mg</td><td style="text-align:center;">{vd_sod}%</td></tr>
+                        <tr><td><strong>Carbohidratos</strong></td><td style="text-align:right;">{formatear_caa(raw_c_cho)} g</td><td style="text-align:right;">{formatear_caa(raw_p_cho)} g</td><td style="text-align:center;">{vd_cho}%</td></tr>
+                        <tr><td style="padding-left:15px;">de los cuales: Azúcares totales</td><td style="text-align:right;">{formatear_caa(raw_c_az_tot)} g</td><td style="text-align:right;">{formatear_caa(raw_p_az_tot)} g</td><td style="text-align:center;">-</td></tr>
+                        <tr><td style="padding-left:15px;">Azúcares añadidos</td><td style="text-align:right;">{formatear_caa(raw_c_az_anad)} g</td><td style="text-align:right;">{formatear_caa(raw_p_az_anad)} g</td><td style="text-align:center;">-</td></tr>
+                        <tr><td><strong>Proteínas</strong></td><td style="text-align:right;">{formatear_caa(raw_c_prot)} g</td><td style="text-align:right;">{formatear_caa(raw_p_prot)} g</td><td style="text-align:center;">{vd_prot}%</td></tr>
+                        <tr><td><strong>Grasas totales</strong></td><td style="text-align:right;">{formatear_caa(raw_c_gt)} g</td><td style="text-align:right;">{formatear_caa(raw_p_gt)} g</td><td style="text-align:center;">{vd_gt}%</td></tr>
+                        <tr><td style="padding-left:15px;">Grasas saturadas</td><td style="text-align:right;">{formatear_caa(raw_c_gs)} g</td><td style="text-align:right;">{formatear_caa(raw_p_gs)} g</td><td style="text-align:center;">{vd_gs}%</td></tr>
+                        <tr><td style="padding-left:15px;">Grasas trans</td><td style="text-align:right;">{formatear_caa(raw_c_gtr)} g</td><td style="text-align:right;">{formatear_caa(raw_p_gtr)} g</td><td style="text-align:center;">-</td></tr>
+                        <tr><td><strong>Fibra alimentaria</strong></td><td style="text-align:right;">{formatear_caa(raw_c_fib)} g</td><td style="text-align:right;">{formatear_caa(raw_p_fib)} g</td><td style="text-align:center;">{vd_fib}%</td></tr>
+                        <tr><td><strong>Sodio</strong></td><td style="text-align:right;">{formatear_caa(raw_c_sod)} mg</td><td style="text-align:right;">{formatear_caa(raw_p_sod)} mg</td><td style="text-align:center;">{vd_sod}%</td></tr>
                     </table>
                     <h4 style="margin-top:20px;">Sellos de Advertencia (Ley 27.642)</h4>
                     <div>{sellos_print}</div>
