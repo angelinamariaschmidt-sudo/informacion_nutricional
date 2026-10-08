@@ -6,6 +6,7 @@ import unicodedata
 import os
 import base64
 import uuid
+import math
 from datetime import datetime
 from streamlit_gsheets import GSheetsConnection
 
@@ -29,22 +30,33 @@ def to_float(val, default=0.0):
     if pd.isna(val):
         return default
     s = str(val).strip().replace(',', '.')
+    # Filtrar textos que no sean números
     try:
         return float(s)
     except:
         return default
 
-# --- REGLA OFICIAL DE FORMATO Y REDONDEO DEL CAA ---
+# --- REGLA DE REDONDEO ARITMÉTICO ESTÁNDAR (>= 0.5 SUMA UNA UNIDAD) ---
+def redondear_entero(val):
+    v = float(val)
+    parte_entera = math.floor(v)
+    decimal = v - parte_entera
+    if decimal >= 0.5:
+        return int(parte_entera + 1)
+    else:
+        return int(parte_entera)
+
+# --- REGLA OFICIAL DE FORMATO Y DECIMALES DEL CAA ---
 def formatear_caa(val):
     v = float(val)
     if v <= 0:
         return "0"
     if v >= 10.0:
-        return f"{round(v):.0f}"
+        return f"{redondear_entero(v)}"
     elif v >= 1.0:
-        return f"{round(v, 1):.1f}"
+        return f"{redondear_entero(v * 10) / 10:.1f}"
     else:
-        return f"{round(v, 2):.2f}"
+        return f"{redondear_entero(v * 100) / 100:.2f}"
 
 def obtener_usuarios():
     try:
@@ -78,92 +90,176 @@ def registrar_evento(usuario, accion, detalle=""):
 def cargar_base_alimentos():
     base = {}
 
-    def procesar_hoja(df_origen, etiqueta_fuente):
-        if df_origen is None or df_origen.empty:
-            return
-        df_limpio = df_origen.dropna(how="all").copy()
-        df_limpio.columns = [normalizar_col(c) for c in df_limpio.columns]
-
-        cols_alimento = [c for c in df_limpio.columns if "alimento" in c or "nombre" in c]
-        col_nom = cols_alimento[0] if cols_alimento else df_limpio.columns[0]
-
-        for _, r in df_limpio.iterrows():
-            nom_raw = str(r.get(col_nom, "")).strip()
-            if not nom_raw or nom_raw.lower() in ["nan", "none", "alimento"]:
-                continue
-
-            nom_display = f"{nom_raw} [{etiqueta_fuente}]" if not nom_raw.endswith(f"[{etiqueta_fuente}]") else nom_raw
-            
-            if nom_display in base:
-                continue
-
-            cho_val = to_float(r.get("cho", r.get("carbohidratos", r.get("carbohidratos disponibles", r.get("carbohidratos totales", 0.0)))))
-            az_tot = to_float(r.get("azuc_tot", r.get("azucares totales", r.get("azucar total", 0.0))))
-            az_anad = to_float(r.get("azuc_anad", r.get("azucares anadidos", r.get("azucar agregado", 0.0))))
-            prot_val = to_float(r.get("prot", r.get("proteinas", 0.0)))
-            gtot_val = to_float(r.get("gtot", r.get("grasas totales", r.get("lipidos totales", 0.0))))
-            gsat_val = to_float(r.get("gsat", r.get("grasas saturadas", r.get("saturados", 0.0))))
-            gtrans_val = to_float(r.get("gtrans", r.get("grasas trans", r.get("trans", 0.0))))
-            fibra_val = to_float(r.get("fibra", r.get("fibra dietetica", r.get("fibra alimentaria", 0.0))))
-            sod_val = to_float(r.get("sodio", 0.0))
-            edulc_val = str(r.get("edulc", r.get("edulcorante", ""))).strip().upper() in ["TRUE", "1", "SI", "VERDADERO"]
-            caf_val = str(r.get("caf", r.get("cafeina", ""))).strip().upper() in ["TRUE", "1", "SI", "VERDADERO"]
-
-            # Kcal por método Atwater
-            kcal_val = to_float(r.get("kcal", r.get("valor energetico", 0.0)))
-            if kcal_val == 0.0:
-                kcal_val = round(((cho_val + prot_val) * 4.0) + (gtot_val * 9.0))
-
-            base[nom_display] = {
-                "nombre_puro": nom_raw,
-                "fuente": etiqueta_fuente,
-                "kcal": kcal_val,
-                "cho": cho_val,
-                "azuc_tot": az_tot,
-                "azuc_anad": az_anad,
-                "prot": prot_val,
-                "gtot": gtot_val,
-                "gsat": gsat_val,
-                "gtrans": gtrans_val,
-                "fibra": fibra_val,
-                "sodio": sod_val,
-                "edulc": edulc_val,
-                "caf": caf_val
-            }
-
+    # 1. LECTURA DE SARA
     try:
-        # 1. Pestaña SARA (Prioritaria)
-        try:
-            df_sara = conn.read(spreadsheet=URL_BASE_NUTRICIONAL, worksheet="SARA", ttl="120s")
-            procesar_hoja(df_sara, "SARA")
-        except Exception:
-            pass
+        df_sara_raw = conn.read(spreadsheet=URL_BASE_NUTRICIONAL, worksheet="SARA", header=None, ttl="120s")
+        if df_sara_raw is not None and not df_sara_raw.empty:
+            for idx, r in df_sara_raw.iterrows():
+                # Salteamos las filas de encabezado iniciales
+                nom_raw = str(r.iloc[0]).strip()
+                if not nom_raw or nom_raw.lower() in ["alimento", "kcal", "g", "nan", "none"]:
+                    continue
 
-        # 2. Pestaña ARGENFOODS (Segunda prioridad)
-        try:
-            df_argen = conn.read(spreadsheet=URL_BASE_NUTRICIONAL, worksheet="ARGENFOODS", ttl="120s")
-            procesar_hoja(df_argen, "ARGENFOODS")
-        except Exception:
-            pass
+                # En SARA:
+                # Col A (0): Alimento
+                # Col B (1): Valor energético
+                # Col D (3): Proteínas
+                # Col E (4): Lípidos totales
+                # Col G (6): Ácidos grasos Saturados
+                # Col J (9): Trans
+                # Col P (15): Carbohidratos disponibles
+                # Col Q (16): Carbohidratos totales
+                # Col R (17): Azúcar total
+                # Col S (18): Azúcar agregado
+                # Col T (19): Fibra alimentaria
+                # Col W (22): Sodio (mg)
 
-        # 3. Pestaña PERSONALIZADA
-        try:
-            df_custom = conn.read(spreadsheet=URL_BASE_NUTRICIONAL, worksheet="PERSONALIZADA", ttl="60s")
-            procesar_hoja(df_custom, "PERSONALIZADA")
-        except Exception:
-            pass
+                nom_display = f"{nom_raw} [SARA]"
+                cho_val = to_float(r.iloc[15]) if len(r) > 15 and to_float(r.iloc[15]) > 0 else (to_float(r.iloc[16]) if len(r) > 16 else 0.0)
+                prot_val = to_float(r.iloc[3]) if len(r) > 3 else 0.0
+                gtot_val = to_float(r.iloc[4]) if len(r) > 4 else 0.0
+                gsat_val = to_float(r.iloc[6]) if len(r) > 6 else 0.0
+                gtrans_val = to_float(r.iloc[9]) if len(r) > 9 else 0.0
+                az_tot = to_float(r.iloc[17]) if len(r) > 17 else 0.0
+                az_anad = to_float(r.iloc[18]) if len(r) > 18 else 0.0
+                fibra_val = to_float(r.iloc[19]) if len(r) > 19 else 0.0
+                sod_val = to_float(r.iloc[22]) if len(r) > 22 else 0.0
 
-        if base:
-            return base
+                kcal_val = to_float(r.iloc[1]) if len(r) > 1 else 0.0
+                if kcal_val == 0.0:
+                    kcal_val = redondear_entero(((cho_val + prot_val) * 4.0) + (gtot_val * 9.0))
 
-    except Exception as e:
-        st.warning(f"Aviso al sincronizar con Google Sheets: {e}")
+                base[nom_display] = {
+                    "nombre_puro": nom_raw,
+                    "fuente": "SARA",
+                    "kcal": kcal_val,
+                    "cho": cho_val,
+                    "azuc_tot": az_tot,
+                    "azuc_anad": az_anad,
+                    "prot": prot_val,
+                    "gtot": gtot_val,
+                    "gsat": gsat_val,
+                    "gtrans": gtrans_val,
+                    "fibra": fibra_val,
+                    "sodio": sod_val,
+                    "edulc": False,
+                    "caf": False
+                }
+    except Exception as e_sara:
+        st.warning(f"Aviso SARA: {e_sara}")
+
+    # 2. LECTURA DE ARGENFOODS
+    try:
+        df_argen_raw = conn.read(spreadsheet=URL_BASE_NUTRICIONAL, worksheet="ARGENFOODS", header=None, ttl="120s")
+        if df_argen_raw is not None and not df_argen_raw.empty:
+            for idx, r in df_argen_raw.iterrows():
+                nom_raw = str(r.iloc[0]).strip()
+                if not nom_raw or nom_raw.lower() in ["alimento", "<enerc>", "nan", "none"]:
+                    continue
+
+                nom_display = f"{nom_raw} [ARGENFOODS]"
+                if nom_display in base:
+                    continue
+
+                # En ARGENFOODS:
+                # Col A (0): Alimento
+                # Col D (3): Energía (Kcal)
+                # Col F (5): Proteínas (g)
+                # Col G (6): Grasa Total (g)
+                # Col H (7): Carbohidratos totales (g)
+                # Col I (8): Carbohidratos disponibles (g)
+                # Col J (9): Fibra dietética (g)
+                # Col L (11): Ac. grasos saturados (g)
+                # Col P (15): Sodio (mg)
+
+                prot_val = to_float(r.iloc[5]) if len(r) > 5 else 0.0
+                gtot_val = to_float(r.iloc[6]) if len(r) > 6 else 0.0
+                cho_val = to_float(r.iloc[8]) if len(r) > 8 and to_float(r.iloc[8]) > 0 else (to_float(r.iloc[7]) if len(r) > 7 else 0.0)
+                fibra_val = to_float(r.iloc[9]) if len(r) > 9 else 0.0
+                gsat_val = to_float(r.iloc[11]) if len(r) > 11 else 0.0
+                sod_val = to_float(r.iloc[15]) if len(r) > 15 else 0.0
+
+                kcal_val = to_float(r.iloc[3]) if len(r) > 3 else 0.0
+                if kcal_val == 0.0:
+                    kcal_val = redondear_entero(((cho_val + prot_val) * 4.0) + (gtot_val * 9.0))
+
+                base[nom_display] = {
+                    "nombre_puro": nom_raw,
+                    "fuente": "ARGENFOODS",
+                    "kcal": kcal_val,
+                    "cho": cho_val,
+                    "azuc_tot": 0.0,
+                    "azuc_anad": 0.0,
+                    "prot": prot_val,
+                    "gtot": gtot_val,
+                    "gsat": gsat_val,
+                    "gtrans": 0.0,
+                    "fibra": fibra_val,
+                    "sodio": sod_val,
+                    "edulc": False,
+                    "caf": False
+                }
+    except Exception as e_argen:
+        st.warning(f"Aviso ARGENFOODS: {e_argen}")
+
+    # 3. LECTURA DE PERSONALIZADA
+    try:
+        df_custom = conn.read(spreadsheet=URL_BASE_NUTRICIONAL, worksheet="PERSONALIZADA", ttl="60s")
+        if df_custom is not None and not df_custom.empty:
+            df_c = df_custom.dropna(how="all").copy()
+            df_c.columns = [normalizar_col(c) for c in df_c.columns]
+            col_al = [c for c in df_c.columns if "alimento" in c or "nombre" in c]
+            c_nom = col_al[0] if col_al else df_c.columns[0]
+
+            for _, r in df_c.iterrows():
+                nom_raw = str(r.get(c_nom, "")).strip()
+                if not nom_raw or nom_raw.lower() in ["nan", "none"]:
+                    continue
+
+                nom_display = f"{nom_raw} [PERSONALIZADA]"
+                if nom_display in base:
+                    continue
+
+                cho_val = to_float(r.get("carbohidratos totales", r.get("carbohidratos", 0.0)))
+                prot_val = to_float(r.get("proteinas", 0.0))
+                gtot_val = to_float(r.get("lipidos totales", r.get("grasas totales", 0.0)))
+                gsat_val = to_float(r.get("saturados", r.get("grasas saturadas", 0.0)))
+                gtrans_val = to_float(r.get("trans", r.get("grasas trans", 0.0)))
+                az_tot = to_float(r.get("azucar total", r.get("azucares totales", 0.0)))
+                az_anad = to_float(r.get("azucar agregado", r.get("azucares anadidos", 0.0)))
+                fibra_val = to_float(r.get("fibra alimentaria", r.get("fibra", 0.0)))
+                sod_val = to_float(r.get("sodio", 0.0))
+                edulc_val = str(r.get("edulcorante", "")).strip().upper() in ["TRUE", "1", "SI", "VERDADERO"]
+                caf_val = str(r.get("cafeina", "")).strip().upper() in ["TRUE", "1", "SI", "VERDADERO"]
+
+                kcal_val = to_float(r.get("valor energetico", 0.0))
+                if kcal_val == 0.0:
+                    kcal_val = redondear_entero(((cho_val + prot_val) * 4.0) + (gtot_val * 9.0))
+
+                base[nom_display] = {
+                    "nombre_puro": nom_raw,
+                    "fuente": "PERSONALIZADA",
+                    "kcal": kcal_val,
+                    "cho": cho_val,
+                    "azuc_tot": az_tot,
+                    "azuc_anad": az_anad,
+                    "prot": prot_val,
+                    "gtot": gtot_val,
+                    "gsat": gsat_val,
+                    "gtrans": gtrans_val,
+                    "fibra": fibra_val,
+                    "sodio": sod_val,
+                    "edulc": edulc_val,
+                    "caf": caf_val
+                }
+    except Exception:
+        pass
+
+    if base:
+        return base
 
     return {
-        "Maíz, grano entero, crudo [SARA]": {"nombre_puro": "Maíz, grano entero, crudo", "fuente": "SARA", "kcal": 365.0, "cho": 65.8, "azuc_tot": 1.6, "azuc_anad": 0.0, "prot": 9.4, "gtot": 4.7, "gsat": 0.67, "gtrans": 0.0, "fibra": 7.3, "sodio": 35.0, "edulc": False, "caf": False},
-        "Choclo amarillo, grano, crudo [SARA]": {"nombre_puro": "Choclo amarillo, grano, crudo", "fuente": "SARA", "kcal": 97.0, "cho": 17.8, "azuc_tot": 4.5, "azuc_anad": 0.0, "prot": 3.7, "gtot": 1.2, "gsat": 0.18, "gtrans": 0.0, "fibra": 2.7, "sodio": 15.0, "edulc": False, "caf": False},
-        "Harina de maíz / Polenta tradicional [ARGENFOODS]": {"nombre_puro": "Harina de maíz / Polenta tradicional", "fuente": "ARGENFOODS", "kcal": 361.0, "cho": 76.8, "azuc_tot": 0.6, "azuc_anad": 0.0, "prot": 6.9, "gtot": 1.4, "gsat": 0.2, "gtrans": 0.0, "fibra": 7.3, "sodio": 1.0, "edulc": False, "caf": False},
-        "Almidón de maíz (Maicena) [ARGENFOODS]": {"nombre_puro": "Almidón de maíz (Maicena)", "fuente": "ARGENFOODS", "kcal": 381.0, "cho": 91.3, "azuc_tot": 0.0, "azuc_anad": 0.0, "prot": 0.3, "gtot": 0.1, "gsat": 0.01, "gtrans": 0.0, "fibra": 0.9, "sodio": 9.0, "edulc": False, "caf": False}
+        "Maíz, grano entero, crudo [SARA]": {"nombre_puro": "Maíz, grano entero, crudo", "fuente": "SARA", "kcal": 365, "cho": 65.8, "azuc_tot": 1.6, "azuc_anad": 0.0, "prot": 9.4, "gtot": 4.7, "gsat": 0.67, "gtrans": 0.0, "fibra": 7.3, "sodio": 35.0, "edulc": False, "caf": False}
     }
 
 BASE_NUTRICIONAL = cargar_base_alimentos()
@@ -318,8 +414,7 @@ with tab1:
         def_sodio = float(d_val.get("sodio", 0.0))
         def_edulc = bool(d_val.get("edulc", False))
         def_caf = bool(d_val.get("caf", False))
-        # Kcal oficial calculada
-        def_kcal = float(round(((def_cho + def_prot) * 4.0) + (def_gtot * 9.0)))
+        def_kcal = float(redondear_entero(((def_cho + def_prot) * 4.0) + (def_gtot * 9.0)))
         es_nuevo = False
     else:
         def_nombre = filtro_txt.strip() if filtro_txt.strip() else ""
@@ -352,7 +447,7 @@ with tab1:
         with c_g1:
             in_gtot = st.number_input("Grasas totales (g):", min_value=0.0, value=def_gtot, step=0.1)
         with c_g2:
-            in_gsat = st.number_input("Grasas saturadas (g):", min_value=0.0, value=def_gsat, step=0.1)
+            in_gsat = st.number_input("Grasas saturadas (g):", min_value=0.0, value=def_gsat, step=0.01)
         with c_g3:
             in_gtrans = st.number_input("Grasas trans (g):", min_value=0.0, value=def_gtrans, step=0.01)
         with c_g4:
@@ -401,8 +496,7 @@ with tab1:
                         except Exception:
                             df_cust_prev = pd.DataFrame()
 
-                        # Recalcular kcal Atwater entero antes de guardar
-                        kcal_a_guardar = round(((float(in_cho) + float(in_prot)) * 4.0) + (float(in_gtot) * 9.0))
+                        kcal_a_guardar = redondear_entero(((float(in_cho) + float(in_prot)) * 4.0) + (float(in_gtot) * 9.0))
 
                         nueva_fila_custom = pd.DataFrame([{
                             "Alimento": in_nombre.strip(),
@@ -454,7 +548,6 @@ with tab1:
             def v(row, k):
                 return float(row.get(k, 0.0))
 
-            # Sumatoria ponderada de macronutrientes en la masa total
             tot_cho = sum((v(r, "Gramos") * v(r, "Carbohidratos_g")) / 100.0 for _, r in df_l.iterrows())
             tot_az_tot = sum((v(r, "Gramos") * v(r, "Azucares_Tot_g")) / 100.0 for _, r in df_l.iterrows())
             tot_az_anad = sum((v(r, "Gramos") * v(r, "Azucar_Anadido_g")) / 100.0 for _, r in df_l.iterrows())
@@ -480,10 +573,10 @@ with tab1:
             c_fib = tot_fib * f100
             c_sod = tot_sod * f100
 
-            # Kcal cada 100g = ((cho + prot) * 4) + (gtot * 9) -> ENTERO
-            c_kcal = round(((c_cho + c_prot) * 4.0) + (c_gt * 9.0))
-            # kJ cada 100g = kcal * (8400 / 2000) -> ENTERO
-            c_kj = round(c_kcal * (8400.0 / 2000.0))
+            # Kcal cada 100g = ((cho + prot) * 4) + (gt * 9) -> ENTERO ARITMÉTICO
+            c_kcal = redondear_entero(((c_cho + c_prot) * 4.0) + (c_gt * 9.0))
+            # kJ cada 100g = c_kcal * 8400 / 2000 -> ENTERO ARITMÉTICO
+            c_kj = redondear_entero(c_kcal * (8400.0 / 2000.0))
 
             # --- CÁLCULO POR PORCIÓN ---
             f_p = porcion / 100.0
@@ -497,19 +590,19 @@ with tab1:
             p_fib = c_fib * f_p
             p_sod = c_sod * f_p
 
-            # Kcal por porción = ((cho + prot) * 4) + (gtot * 9) -> ENTERO
-            p_kcal = round(((p_cho + p_prot) * 4.0) + (p_gt * 9.0))
-            # kJ por porción = kcal * (8400 / 2000) -> ENTERO
-            p_kj = round(p_kcal * (8400.0 / 2000.0))
+            # Kcal por porción = ((p_cho + p_prot) * 4) + (p_gt * 9) -> ENTERO ARITMÉTICO (>= 0.5 suma 1)
+            p_kcal = redondear_entero(((p_cho + p_prot) * 4.0) + (p_gt * 9.0))
+            # kJ por porción = p_kcal * 8400 / 2000 -> ENTERO ARITMÉTICO
+            p_kj = redondear_entero(p_kcal * (8400.0 / 2000.0))
 
             # --- VALORES DIARIOS (%VD) - SIEMPRE ENTEROS ---
-            vd_kcal = round((p_kcal / 2000.0) * 100)
-            vd_cho = round((p_cho / 300.0) * 100)
-            vd_prot = round((p_prot / 75.0) * 100)
-            vd_gt = round((p_gt / 55.0) * 100)
-            vd_gs = round((p_gs / 22.0) * 100)
-            vd_fib = round((p_fib / 25.0) * 100)
-            vd_sod = round((p_sod / 2000.0) * 100)
+            vd_kcal = redondear_entero((p_kcal / 2000.0) * 100)
+            vd_cho = redondear_entero((p_cho / 300.0) * 100)
+            vd_prot = redondear_entero((p_prot / 75.0) * 100)
+            vd_gt = redondear_entero((p_gt / 55.0) * 100)
+            vd_gs = redondear_entero((p_gs / 22.0) * 100)
+            vd_fib = redondear_entero((p_fib / 25.0) * 100)
+            vd_sod = redondear_entero((p_sod / 2000.0) * 100)
 
             # --- EVALUACIÓN DE SELLOS (LEY 27.642) ---
             sellos = []
