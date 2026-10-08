@@ -82,7 +82,10 @@ def cargar_base_alimentos():
         if df_origen is None or df_origen.empty:
             return
         df_limpio = df_origen.dropna(how="all").copy()
-        df_limpio.columns = [normalizar_col(c) for c in df_limpio.columns]
+        
+        # Mapeo de columnas normalizadas
+        cols_norm = [normalizar_col(c) for c in df_limpio.columns]
+        df_limpio.columns = cols_norm
 
         cols_alimento = [c for c in df_limpio.columns if "alimento" in c or "nombre" in c]
         col_nom = cols_alimento[0] if cols_alimento else df_limpio.columns[0]
@@ -97,19 +100,41 @@ def cargar_base_alimentos():
             if nom_display in base:
                 continue
 
+            # Extracción segura de grasas saturadas
+            gsat_val = None
+            # 1. Búsqueda por alias comunes
+            for col_alias in ["gsat", "grasas saturadas", "saturados", "acidos grasos saturados", "ags", "sat"]:
+                for c in df_limpio.columns:
+                    if col_alias == c or col_alias in c:
+                        gsat_val = r.get(c)
+                        break
+                if gsat_val is not None:
+                    break
+
+            # 2. Respaldo por posición de columna si no coincidió el encabezado:
+            # SARA: Columna G (índice 6)
+            # ARGENFOODS: Columna L (índice 11)
+            if gsat_val is None or pd.isna(gsat_val):
+                try:
+                    if etiqueta_fuente == "SARA" and len(r) > 6:
+                        gsat_val = r.iloc[6]
+                    elif etiqueta_fuente == "ARGENFOODS" and len(r) > 11:
+                        gsat_val = r.iloc[11]
+                except Exception:
+                    pass
+
             cho_val = to_float(r.get("cho", r.get("carbohidratos", r.get("carbohidratos disponibles", r.get("carbohidratos totales", 0.0)))))
             az_tot = to_float(r.get("azuc_tot", r.get("azucares totales", r.get("azucar total", 0.0))))
             az_anad = to_float(r.get("azuc_anad", r.get("azucares anadidos", r.get("azucar agregado", 0.0))))
             prot_val = to_float(r.get("prot", r.get("proteinas", 0.0)))
             gtot_val = to_float(r.get("gtot", r.get("grasas totales", r.get("lipidos totales", 0.0))))
-            gsat_val = to_float(r.get("gsat", r.get("grasas saturadas", r.get("saturados", 0.0))))
             gtrans_val = to_float(r.get("gtrans", r.get("grasas trans", r.get("trans", 0.0))))
             fibra_val = to_float(r.get("fibra", r.get("fibra dietetica", r.get("fibra alimentaria", 0.0))))
             sod_val = to_float(r.get("sodio", 0.0))
             edulc_val = str(r.get("edulc", r.get("edulcorante", ""))).strip().upper() in ["TRUE", "1", "SI", "VERDADERO"]
             caf_val = str(r.get("caf", r.get("cafeina", ""))).strip().upper() in ["TRUE", "1", "SI", "VERDADERO"]
 
-            # Kcal por método Atwater
+            # Kcal por Atwater reglamentario
             kcal_val = to_float(r.get("kcal", r.get("valor energetico", 0.0)))
             if kcal_val == 0.0:
                 kcal_val = round(((cho_val + prot_val) * 4.0) + (gtot_val * 9.0))
@@ -123,7 +148,7 @@ def cargar_base_alimentos():
                 "azuc_anad": az_anad,
                 "prot": prot_val,
                 "gtot": gtot_val,
-                "gsat": gsat_val,
+                "gsat": to_float(gsat_val),
                 "gtrans": gtrans_val,
                 "fibra": fibra_val,
                 "sodio": sod_val,
@@ -318,7 +343,6 @@ with tab1:
         def_sodio = float(d_val.get("sodio", 0.0))
         def_edulc = bool(d_val.get("edulc", False))
         def_caf = bool(d_val.get("caf", False))
-        # Kcal oficial calculada
         def_kcal = float(round(((def_cho + def_prot) * 4.0) + (def_gtot * 9.0)))
         es_nuevo = False
     else:
@@ -352,7 +376,7 @@ with tab1:
         with c_g1:
             in_gtot = st.number_input("Grasas totales (g):", min_value=0.0, value=def_gtot, step=0.1)
         with c_g2:
-            in_gsat = st.number_input("Grasas saturadas (g):", min_value=0.0, value=def_gsat, step=0.1)
+            in_gsat = st.number_input("Grasas saturadas (g):", min_value=0.0, value=def_gsat, step=0.01)
         with c_g3:
             in_gtrans = st.number_input("Grasas trans (g):", min_value=0.0, value=def_gtrans, step=0.01)
         with c_g4:
@@ -401,7 +425,6 @@ with tab1:
                         except Exception:
                             df_cust_prev = pd.DataFrame()
 
-                        # Recalcular kcal Atwater entero antes de guardar
                         kcal_a_guardar = round(((float(in_cho) + float(in_prot)) * 4.0) + (float(in_gtot) * 9.0))
 
                         nueva_fila_custom = pd.DataFrame([{
@@ -454,7 +477,6 @@ with tab1:
             def v(row, k):
                 return float(row.get(k, 0.0))
 
-            # Sumatoria ponderada de macronutrientes en la masa total
             tot_cho = sum((v(r, "Gramos") * v(r, "Carbohidratos_g")) / 100.0 for _, r in df_l.iterrows())
             tot_az_tot = sum((v(r, "Gramos") * v(r, "Azucares_Tot_g")) / 100.0 for _, r in df_l.iterrows())
             tot_az_anad = sum((v(r, "Gramos") * v(r, "Azucar_Anadido_g")) / 100.0 for _, r in df_l.iterrows())
