@@ -11,7 +11,7 @@ from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(page_title="Plataforma Bromatológica - Ecomeg", layout="wide")
 
-# URL de la nueva base de datos nutricional completa (SARA / ARGENFOODS / PERSONALIZADA)
+# URL de la base de datos nutricional completa (SARA / ARGENFOODS / PERSONALIZADA)
 URL_BASE_NUTRICIONAL = "https://docs.google.com/spreadsheets/d/1Mtko_nnHf8w8XSREGEIzJbjZekWO-lfeMld4FLt-O7I/edit"
 
 # --- CONEXIÓN A GOOGLE SHEETS ---
@@ -33,6 +33,18 @@ def to_float(val, default=0.0):
         return float(s)
     except:
         return default
+
+# --- REGLA OFICIAL DE FORMATO Y REDONDEO DEL CAA ---
+def formatear_caa(val):
+    v = float(val)
+    if v <= 0:
+        return "0"
+    if v >= 10.0:
+        return f"{round(v):.0f}"
+    elif v >= 1.0:
+        return f"{round(v, 1):.1f}"
+    else:
+        return f"{round(v, 2):.2f}"
 
 def obtener_usuarios():
     try:
@@ -82,39 +94,39 @@ def cargar_base_alimentos():
 
             nom_display = f"{nom_raw} [{etiqueta_fuente}]" if not nom_raw.endswith(f"[{etiqueta_fuente}]") else nom_raw
             
-            # Si ya se cargó previamente (ej: de SARA), se respeta la prioridad y no se pisa
             if nom_display in base:
                 continue
 
-            cho_val = r.get("cho", r.get("carbohidratos", r.get("carbohidratos disponibles", r.get("carbohidratos totales", 0.0))))
-            az_tot = r.get("azuc_tot", r.get("azucares totales", r.get("azucar total", 0.0)))
-            az_anad = r.get("azuc_anad", r.get("azucares anadidos", r.get("azucar agregado", 0.0)))
-            prot_val = r.get("prot", r.get("proteinas", 0.0))
-            gtot_val = r.get("gtot", r.get("grasas totales", r.get("lipidos totales", 0.0)))
-            gsat_val = r.get("gsat", r.get("grasas saturadas", r.get("saturados", 0.0)))
-            gtrans_val = r.get("gtrans", r.get("grasas trans", r.get("trans", 0.0)))
-            fibra_val = r.get("fibra", r.get("fibra dietetica", r.get("fibra alimentaria", 0.0)))
-            sod_val = r.get("sodio", 0.0)
+            cho_val = to_float(r.get("cho", r.get("carbohidratos", r.get("carbohidratos disponibles", r.get("carbohidratos totales", 0.0)))))
+            az_tot = to_float(r.get("azuc_tot", r.get("azucares totales", r.get("azucar total", 0.0))))
+            az_anad = to_float(r.get("azuc_anad", r.get("azucares anadidos", r.get("azucar agregado", 0.0))))
+            prot_val = to_float(r.get("prot", r.get("proteinas", 0.0)))
+            gtot_val = to_float(r.get("gtot", r.get("grasas totales", r.get("lipidos totales", 0.0))))
+            gsat_val = to_float(r.get("gsat", r.get("grasas saturadas", r.get("saturados", 0.0))))
+            gtrans_val = to_float(r.get("gtrans", r.get("grasas trans", r.get("trans", 0.0))))
+            fibra_val = to_float(r.get("fibra", r.get("fibra dietetica", r.get("fibra alimentaria", 0.0))))
+            sod_val = to_float(r.get("sodio", 0.0))
             edulc_val = str(r.get("edulc", r.get("edulcorante", ""))).strip().upper() in ["TRUE", "1", "SI", "VERDADERO"]
             caf_val = str(r.get("caf", r.get("cafeina", ""))).strip().upper() in ["TRUE", "1", "SI", "VERDADERO"]
 
+            # Kcal por método Atwater
             kcal_val = to_float(r.get("kcal", r.get("valor energetico", 0.0)))
             if kcal_val == 0.0:
-                kcal_val = (to_float(cho_val) * 4.0) + (to_float(prot_val) * 4.0) + (to_float(gtot_val) * 9.0)
+                kcal_val = round(((cho_val + prot_val) * 4.0) + (gtot_val * 9.0))
 
             base[nom_display] = {
                 "nombre_puro": nom_raw,
                 "fuente": etiqueta_fuente,
                 "kcal": kcal_val,
-                "cho": to_float(cho_val),
-                "azuc_tot": to_float(az_tot),
-                "azuc_anad": to_float(az_anad),
-                "prot": to_float(prot_val),
-                "gtot": to_float(gtot_val),
-                "gsat": to_float(gsat_val),
-                "gtrans": to_float(gtrans_val),
-                "fibra": to_float(fibra_val),
-                "sodio": to_float(sod_val),
+                "cho": cho_val,
+                "azuc_tot": az_tot,
+                "azuc_anad": az_anad,
+                "prot": prot_val,
+                "gtot": gtot_val,
+                "gsat": gsat_val,
+                "gtrans": gtrans_val,
+                "fibra": fibra_val,
+                "sodio": sod_val,
                 "edulc": edulc_val,
                 "caf": caf_val
             }
@@ -134,7 +146,7 @@ def cargar_base_alimentos():
         except Exception:
             pass
 
-        # 3. Pestaña PERSONALIZADA (Alimentos agregados manualmente)
+        # 3. Pestaña PERSONALIZADA
         try:
             df_custom = conn.read(spreadsheet=URL_BASE_NUTRICIONAL, worksheet="PERSONALIZADA", ttl="60s")
             procesar_hoja(df_custom, "PERSONALIZADA")
@@ -147,7 +159,6 @@ def cargar_base_alimentos():
     except Exception as e:
         st.warning(f"Aviso al sincronizar con Google Sheets: {e}")
 
-    # Respaldo básico garantizado
     return {
         "Maíz, grano entero, crudo [SARA]": {"nombre_puro": "Maíz, grano entero, crudo", "fuente": "SARA", "kcal": 365.0, "cho": 65.8, "azuc_tot": 1.6, "azuc_anad": 0.0, "prot": 9.4, "gtot": 4.7, "gsat": 0.67, "gtrans": 0.0, "fibra": 7.3, "sodio": 35.0, "edulc": False, "caf": False},
         "Choclo amarillo, grano, crudo [SARA]": {"nombre_puro": "Choclo amarillo, grano, crudo", "fuente": "SARA", "kcal": 97.0, "cho": 17.8, "azuc_tot": 4.5, "azuc_anad": 0.0, "prot": 3.7, "gtot": 1.2, "gsat": 0.18, "gtrans": 0.0, "fibra": 2.7, "sodio": 15.0, "edulc": False, "caf": False},
@@ -271,7 +282,6 @@ with tab1:
     with c_f1:
         filtro_txt = st.text_input("Buscar insumo en la base:", placeholder="Ej: acelga, maiz, harina, choclo, dulce de leche...")
 
-    # Cascada de visualización respetando estricta prioridad
     if filtro_txt.strip():
         txt_norm = normalizar_texto(filtro_txt)
         opc_sara = [a for a in lista_alimentos_completa if "[sara]" in a.lower() and txt_norm in normalizar_texto(a)]
@@ -294,11 +304,9 @@ with tab1:
         combo_opciones = ["-- Ingresar nuevo / personalizado --"] + opciones
         ing_elegido = st.selectbox("Seleccionar ingrediente:", combo_opciones)
 
-    # Valores predefinidos según el alimento elegido
     if ing_elegido != "-- Ingresar nuevo / personalizado --":
         d_val = BASE_NUTRICIONAL.get(ing_elegido, {})
         def_nombre = d_val.get("nombre_puro", ing_elegido)
-        def_kcal = float(d_val.get("kcal", 0.0))
         def_cho = float(d_val.get("cho", 0.0))
         def_az_tot = float(d_val.get("azuc_tot", 0.0))
         def_az_anad = float(d_val.get("azuc_anad", 0.0))
@@ -310,6 +318,8 @@ with tab1:
         def_sodio = float(d_val.get("sodio", 0.0))
         def_edulc = bool(d_val.get("edulc", False))
         def_caf = bool(d_val.get("caf", False))
+        # Kcal oficial calculada
+        def_kcal = float(round(((def_cho + def_prot) * 4.0) + (def_gtot * 9.0)))
         es_nuevo = False
     else:
         def_nombre = filtro_txt.strip() if filtro_txt.strip() else ""
@@ -326,7 +336,7 @@ with tab1:
         with c_i2:
             in_gramos = st.number_input("Gramos usados:", min_value=0.1, value=100.0, step=5.0)
         with c_i3:
-            in_kcal = st.number_input("Kcal / 100g:", min_value=0.0, value=def_kcal, step=1.0)
+            in_kcal = st.number_input("Kcal / 100g (entero):", min_value=0.0, value=def_kcal, step=1.0)
 
         c_m1, c_m2, c_m3, c_m4 = st.columns(4)
         with c_m1:
@@ -366,7 +376,6 @@ with tab1:
                     st.session_state.receta.append({
                         "Ingrediente": in_nombre.strip(),
                         "Gramos": float(in_gramos),
-                        "Kcal": float(in_kcal),
                         "Carbohidratos_g": float(in_cho),
                         "Azucares_Tot_g": float(in_az_tot),
                         "Azucar_Anadido_g": float(in_az_anad),
@@ -383,7 +392,6 @@ with tab1:
                 else:
                     st.error("Por favor, ingresá una denominación para el ingrediente.")
 
-        # Botón para persistir el alimento en Google Sheets (Hoja PERSONALIZADA)
         with col_btn_guardar:
             if es_nuevo and st.button("💾 Guardar en base de datos Google Sheets"):
                 if in_nombre.strip():
@@ -393,9 +401,12 @@ with tab1:
                         except Exception:
                             df_cust_prev = pd.DataFrame()
 
+                        # Recalcular kcal Atwater entero antes de guardar
+                        kcal_a_guardar = round(((float(in_cho) + float(in_prot)) * 4.0) + (float(in_gtot) * 9.0))
+
                         nueva_fila_custom = pd.DataFrame([{
                             "Alimento": in_nombre.strip(),
-                            "Valor energético": in_kcal,
+                            "Valor energético": kcal_a_guardar,
                             "Carbohidratos totales": in_cho,
                             "Azúcar total": in_az_tot,
                             "Azúcar agregado": in_az_anad,
@@ -443,7 +454,7 @@ with tab1:
             def v(row, k):
                 return float(row.get(k, 0.0))
 
-            tot_kcal = sum((v(r, "Gramos") * v(r, "Kcal")) / 100.0 for _, r in df_l.iterrows())
+            # Sumatoria ponderada de macronutrientes en la masa total
             tot_cho = sum((v(r, "Gramos") * v(r, "Carbohidratos_g")) / 100.0 for _, r in df_l.iterrows())
             tot_az_tot = sum((v(r, "Gramos") * v(r, "Azucares_Tot_g")) / 100.0 for _, r in df_l.iterrows())
             tot_az_anad = sum((v(r, "Gramos") * v(r, "Azucar_Anadido_g")) / 100.0 for _, r in df_l.iterrows())
@@ -457,22 +468,50 @@ with tab1:
             tiene_edulcorante = any(bool(r.get("Edulcorante", False)) for _, r in df_l.iterrows())
             tiene_cafeina = any(bool(r.get("Cafeina", False)) for _, r in df_l.iterrows())
 
+            # --- CÁLCULO CADA 100 g (Masa Cocida / Neta) ---
             f100 = 100.0 / peso_cocido
-            c_kcal, c_kj = tot_kcal * f100, tot_kcal * f100 * 4.184
-            c_cho, c_az_tot, c_az_anad = tot_cho * f100, tot_az_tot * f100, tot_az_anad * f100
-            c_prot, c_gt, c_gs = tot_prot * f100, tot_gt * f100, tot_gs * f100
-            c_gtr, c_fib, c_sod = tot_gtr * f100, tot_fib * f100, tot_sod * f100
+            c_cho = tot_cho * f100
+            c_az_tot = tot_az_tot * f100
+            c_az_anad = tot_az_anad * f100
+            c_prot = tot_prot * f100
+            c_gt = tot_gt * f100
+            c_gs = tot_gs * f100
+            c_gtr = tot_gtr * f100
+            c_fib = tot_fib * f100
+            c_sod = tot_sod * f100
 
+            # Kcal cada 100g = ((cho + prot) * 4) + (gtot * 9) -> ENTERO
+            c_kcal = round(((c_cho + c_prot) * 4.0) + (c_gt * 9.0))
+            # kJ cada 100g = kcal * (8400 / 2000) -> ENTERO
+            c_kj = round(c_kcal * (8400.0 / 2000.0))
+
+            # --- CÁLCULO POR PORCIÓN ---
             f_p = porcion / 100.0
-            p_kcal, p_kj = c_kcal * f_p, c_kj * f_p
-            p_cho, p_az_tot, p_az_anad = c_cho * f_p, c_az_tot * f_p, c_az_anad * f_p
-            p_prot, p_gt, p_gs = c_prot * f_p, c_gt * f_p, c_gs * f_p
-            p_gtr, p_fib, p_sod = c_gtr * f_p, c_fib * f_p, c_sod * f_p
+            p_cho = c_cho * f_p
+            p_az_tot = c_az_tot * f_p
+            p_az_anad = c_az_anad * f_p
+            p_prot = c_prot * f_p
+            p_gt = c_gt * f_p
+            p_gs = c_gs * f_p
+            p_gtr = c_gtr * f_p
+            p_fib = c_fib * f_p
+            p_sod = c_sod * f_p
 
-            vd_kcal, vd_cho = round((p_kcal / 2000.0) * 100), round((p_cho / 300.0) * 100)
-            vd_prot, vd_gt = round((p_prot / 75.0) * 100), round((p_gt / 55.0) * 100)
-            vd_gs, vd_fib, vd_sod = round((p_gs / 22.0) * 100), round((p_fib / 25.0) * 100), round((p_sod / 2000.0) * 100)
+            # Kcal por porción = ((cho + prot) * 4) + (gtot * 9) -> ENTERO
+            p_kcal = round(((p_cho + p_prot) * 4.0) + (p_gt * 9.0))
+            # kJ por porción = kcal * (8400 / 2000) -> ENTERO
+            p_kj = round(p_kcal * (8400.0 / 2000.0))
 
+            # --- VALORES DIARIOS (%VD) - SIEMPRE ENTEROS ---
+            vd_kcal = round((p_kcal / 2000.0) * 100)
+            vd_cho = round((p_cho / 300.0) * 100)
+            vd_prot = round((p_prot / 75.0) * 100)
+            vd_gt = round((p_gt / 55.0) * 100)
+            vd_gs = round((p_gs / 22.0) * 100)
+            vd_fib = round((p_fib / 25.0) * 100)
+            vd_sod = round((p_sod / 2000.0) * 100)
+
+            # --- EVALUACIÓN DE SELLOS (LEY 27.642) ---
             sellos = []
             if c_az_anad > 0 and c_kcal > 0 and ((c_az_anad * 4.0) / c_kcal) >= 0.10:
                 sellos.append("EXCESO EN AZÚCARES")
@@ -498,14 +537,28 @@ with tab1:
                         "Grasas trans", "Fibra alimentaria", "Sodio"
                     ],
                     "Cada 100 g": [
-                        f"{c_kcal:.0f} kcal = {c_kj:.0f} kJ", f"{c_cho:.1f} g", f"{c_az_tot:.1f} g",
-                        f"{c_az_anad:.1f} g", f"{c_prot:.1f} g", f"{c_gt:.1f} g", f"{c_gs:.1f} g",
-                        f"{c_gtr:.1f} g", f"{c_fib:.1f} g", f"{c_sod:.1f} mg"
+                        f"{c_kcal} kcal = {c_kj} kJ",
+                        f"{formatear_caa(c_cho)} g",
+                        f"{formatear_caa(c_az_tot)} g",
+                        f"{formatear_caa(c_az_anad)} g",
+                        f"{formatear_caa(c_prot)} g",
+                        f"{formatear_caa(c_gt)} g",
+                        f"{formatear_caa(c_gs)} g",
+                        f"{formatear_caa(c_gtr)} g",
+                        f"{formatear_caa(c_fib)} g",
+                        f"{formatear_caa(c_sod)} mg"
                     ],
                     f"Por porción ({porcion:.0f} g)": [
-                        f"{p_kcal:.0f} kcal = {p_kj:.0f} kJ", f"{p_cho:.1f} g", f"{p_az_tot:.1f} g",
-                        f"{p_az_anad:.1f} g", f"{p_prot:.1f} g", f"{p_gt:.1f} g", f"{p_gs:.1f} g",
-                        f"{p_gtr:.1f} g", f"{p_fib:.1f} g", f"{p_sod:.1f} mg"
+                        f"{p_kcal} kcal = {p_kj} kJ",
+                        f"{formatear_caa(p_cho)} g",
+                        f"{formatear_caa(p_az_tot)} g",
+                        f"{formatear_caa(p_az_anad)} g",
+                        f"{formatear_caa(p_prot)} g",
+                        f"{formatear_caa(p_gt)} g",
+                        f"{formatear_caa(p_gs)} g",
+                        f"{formatear_caa(p_gtr)} g",
+                        f"{formatear_caa(p_fib)} g",
+                        f"{formatear_caa(p_sod)} mg"
                     ],
                     "%VD*": [
                         f"{vd_kcal}%", f"{vd_cho}%", "-", "-", f"{vd_prot}%", f"{vd_gt}%",
@@ -561,16 +614,16 @@ with tab1:
                     <p><strong>Peso Neto:</strong> {peso_cocido:.0f} g | <strong>Porción de referencia:</strong> {porcion:.0f} g</p>
                     <table>
                         <tr><th>Nutriente</th><th style="text-align:right;">Cada 100 g</th><th style="text-align:right;">Porción ({porcion:.0f} g)</th><th style="text-align:center;">% VD*</th></tr>
-                        <tr><td><strong>Valor energético</strong></td><td style="text-align:right;">{c_kcal:.0f} kcal = {c_kj:.0f} kJ</td><td style="text-align:right;">{p_kcal:.0f} kcal = {p_kj:.0f} kJ</td><td style="text-align:center;">{vd_kcal}%</td></tr>
-                        <tr><td><strong>Carbohidratos</strong></td><td style="text-align:right;">{c_cho:.1f} g</td><td style="text-align:right;">{p_cho:.1f} g</td><td style="text-align:center;">{vd_cho}%</td></tr>
-                        <tr><td style="padding-left:15px;">de los cuales: Azúcares totales</td><td style="text-align:right;">{c_az_tot:.1f} g</td><td style="text-align:right;">{p_az_tot:.1f} g</td><td style="text-align:center;">-</td></tr>
-                        <tr><td style="padding-left:15px;">Azúcares añadidos</td><td style="text-align:right;">{c_az_anad:.1f} g</td><td style="text-align:right;">{p_az_anad:.1f} g</td><td style="text-align:center;">-</td></tr>
-                        <tr><td><strong>Proteínas</strong></td><td style="text-align:right;">{c_prot:.1f} g</td><td style="text-align:right;">{p_prot:.1f} g</td><td style="text-align:center;">{vd_prot}%</td></tr>
-                        <tr><td><strong>Grasas totales</strong></td><td style="text-align:right;">{c_gt:.1f} g</td><td style="text-align:right;">{p_gt:.1f} g</td><td style="text-align:center;">{vd_gt}%</td></tr>
-                        <tr><td style="padding-left:15px;">Grasas saturadas</td><td style="text-align:right;">{c_gs:.1f} g</td><td style="text-align:right;">{p_gs:.1f} g</td><td style="text-align:center;">{vd_gs}%</td></tr>
-                        <tr><td style="padding-left:15px;">Grasas trans</td><td style="text-align:right;">{c_gtr:.1f} g</td><td style="text-align:right;">{p_gtr:.1f} g</td><td style="text-align:center;">-</td></tr>
-                        <tr><td><strong>Fibra alimentaria</strong></td><td style="text-align:right;">{c_fib:.1f} g</td><td style="text-align:right;">{p_fib:.1f} g</td><td style="text-align:center;">{vd_fib}%</td></tr>
-                        <tr><td><strong>Sodio</strong></td><td style="text-align:right;">{c_sod:.1f} mg</td><td style="text-align:right;">{p_sod:.1f} mg</td><td style="text-align:center;">{vd_sod}%</td></tr>
+                        <tr><td><strong>Valor energético</strong></td><td style="text-align:right;">{c_kcal} kcal = {c_kj} kJ</td><td style="text-align:right;">{p_kcal} kcal = {p_kj} kJ</td><td style="text-align:center;">{vd_kcal}%</td></tr>
+                        <tr><td><strong>Carbohidratos</strong></td><td style="text-align:right;">{formatear_caa(c_cho)} g</td><td style="text-align:right;">{formatear_caa(p_cho)} g</td><td style="text-align:center;">{vd_cho}%</td></tr>
+                        <tr><td style="padding-left:15px;">de los cuales: Azúcares totales</td><td style="text-align:right;">{formatear_caa(c_az_tot)} g</td><td style="text-align:right;">{formatear_caa(p_az_tot)} g</td><td style="text-align:center;">-</td></tr>
+                        <tr><td style="padding-left:15px;">Azúcares añadidos</td><td style="text-align:right;">{formatear_caa(c_az_anad)} g</td><td style="text-align:right;">{formatear_caa(p_az_anad)} g</td><td style="text-align:center;">-</td></tr>
+                        <tr><td><strong>Proteínas</strong></td><td style="text-align:right;">{formatear_caa(c_prot)} g</td><td style="text-align:right;">{formatear_caa(p_prot)} g</td><td style="text-align:center;">{vd_prot}%</td></tr>
+                        <tr><td><strong>Grasas totales</strong></td><td style="text-align:right;">{formatear_caa(c_gt)} g</td><td style="text-align:right;">{formatear_caa(p_gt)} g</td><td style="text-align:center;">{vd_gt}%</td></tr>
+                        <tr><td style="padding-left:15px;">Grasas saturadas</td><td style="text-align:right;">{formatear_caa(c_gs)} g</td><td style="text-align:right;">{formatear_caa(p_gs)} g</td><td style="text-align:center;">{vd_gs}%</td></tr>
+                        <tr><td style="padding-left:15px;">Grasas trans</td><td style="text-align:right;">{formatear_caa(c_gtr)} g</td><td style="text-align:right;">{formatear_caa(p_gtr)} g</td><td style="text-align:center;">-</td></tr>
+                        <tr><td><strong>Fibra alimentaria</strong></td><td style="text-align:right;">{formatear_caa(c_fib)} g</td><td style="text-align:right;">{formatear_caa(p_fib)} g</td><td style="text-align:center;">{vd_fib}%</td></tr>
+                        <tr><td><strong>Sodio</strong></td><td style="text-align:right;">{formatear_caa(c_sod)} mg</td><td style="text-align:right;">{formatear_caa(p_sod)} mg</td><td style="text-align:center;">{vd_sod}%</td></tr>
                     </table>
                     <h4 style="margin-top:20px;">Sellos de Advertencia (Ley 27.642)</h4>
                     <div>{sellos_print}</div>
