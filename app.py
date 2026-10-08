@@ -12,7 +12,7 @@ from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(page_title="Plataforma Bromatológica - Ecomeg", layout="wide")
 
-# URL de la base de datos nutricional completa (SARA / ARGENFOODS / PERSONALIZADA)
+# URL de la base de datos nutricional oficial
 URL_BASE_NUTRICIONAL = "https://docs.google.com/spreadsheets/d/1Mtko_nnHf8w8XSREGEIzJbjZekWO-lfeMld4FLt-O7I/edit"
 
 # --- CONEXIÓN A GOOGLE SHEETS ---
@@ -30,7 +30,6 @@ def to_float(val, default=0.0):
     if pd.isna(val):
         return default
     s = str(val).strip().replace(',', '.')
-    # Filtrar textos que no sean números
     try:
         return float(s)
     except:
@@ -95,30 +94,29 @@ def cargar_base_alimentos():
         df_sara_raw = conn.read(spreadsheet=URL_BASE_NUTRICIONAL, worksheet="SARA", header=None, ttl="120s")
         if df_sara_raw is not None and not df_sara_raw.empty:
             for idx, r in df_sara_raw.iterrows():
-                # Salteamos las filas de encabezado iniciales
                 nom_raw = str(r.iloc[0]).strip()
                 if not nom_raw or nom_raw.lower() in ["alimento", "kcal", "g", "nan", "none"]:
                     continue
 
-                # En SARA:
+                nom_display = f"{nom_raw} [SARA]"
+
+                # Mapeo exacto de columnas en SARA:
                 # Col A (0): Alimento
                 # Col B (1): Valor energético
                 # Col D (3): Proteínas
                 # Col E (4): Lípidos totales
-                # Col G (6): Ácidos grasos Saturados
+                # Col G (6): Ácidos grasos Saturados (Columna G)
                 # Col J (9): Trans
-                # Col P (15): Carbohidratos disponibles
-                # Col Q (16): Carbohidratos totales
+                # Col Q (16): Carbohidratos totales (Columna Q)
                 # Col R (17): Azúcar total
                 # Col S (18): Azúcar agregado
                 # Col T (19): Fibra alimentaria
                 # Col W (22): Sodio (mg)
 
-                nom_display = f"{nom_raw} [SARA]"
-                cho_val = to_float(r.iloc[15]) if len(r) > 15 and to_float(r.iloc[15]) > 0 else (to_float(r.iloc[16]) if len(r) > 16 else 0.0)
+                cho_val = to_float(r.iloc[16]) if len(r) > 16 else 0.0  # Columna Q: Carbohidratos totales
                 prot_val = to_float(r.iloc[3]) if len(r) > 3 else 0.0
                 gtot_val = to_float(r.iloc[4]) if len(r) > 4 else 0.0
-                gsat_val = to_float(r.iloc[6]) if len(r) > 6 else 0.0
+                gsat_val = to_float(r.iloc[6]) if len(r) > 6 else 0.0  # Columna G: Grasas saturadas
                 gtrans_val = to_float(r.iloc[9]) if len(r) > 9 else 0.0
                 az_tot = to_float(r.iloc[17]) if len(r) > 17 else 0.0
                 az_anad = to_float(r.iloc[18]) if len(r) > 18 else 0.0
@@ -161,22 +159,21 @@ def cargar_base_alimentos():
                 if nom_display in base:
                     continue
 
-                # En ARGENFOODS:
+                # Mapeo exacto de columnas en ARGENFOODS:
                 # Col A (0): Alimento
                 # Col D (3): Energía (Kcal)
                 # Col F (5): Proteínas (g)
                 # Col G (6): Grasa Total (g)
-                # Col H (7): Carbohidratos totales (g)
-                # Col I (8): Carbohidratos disponibles (g)
+                # Col H (7): Carbohidratos totales (Columna H)
                 # Col J (9): Fibra dietética (g)
-                # Col L (11): Ac. grasos saturados (g)
+                # Col L (11): Ac. grasos saturados (Columna L)
                 # Col P (15): Sodio (mg)
 
                 prot_val = to_float(r.iloc[5]) if len(r) > 5 else 0.0
                 gtot_val = to_float(r.iloc[6]) if len(r) > 6 else 0.0
-                cho_val = to_float(r.iloc[8]) if len(r) > 8 and to_float(r.iloc[8]) > 0 else (to_float(r.iloc[7]) if len(r) > 7 else 0.0)
+                cho_val = to_float(r.iloc[7]) if len(r) > 7 else 0.0   # Columna H: Carbohidratos totales
                 fibra_val = to_float(r.iloc[9]) if len(r) > 9 else 0.0
-                gsat_val = to_float(r.iloc[11]) if len(r) > 11 else 0.0
+                gsat_val = to_float(r.iloc[11]) if len(r) > 11 else 0.0 # Columna L: Grasas saturadas
                 sod_val = to_float(r.iloc[15]) if len(r) > 15 else 0.0
 
                 kcal_val = to_float(r.iloc[3]) if len(r) > 3 else 0.0
